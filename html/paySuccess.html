@@ -33,7 +33,7 @@
   <script>
       $(function () {
           //!!!!
-          //这个页面是0元订单不走支付,创建业务订单后,直接跳转,所以不能查段斌的接口,因此如果要用这个页面,必须保证原项目中已经localStorage.setItem('requestUrl'),且查看订单页面路径必须保证一样才能用这页;
+          //这个页面是0元订单不走支付,创建业务订单后,直接跳转,所以不能查段斌的接口。
           // !!!
           //click事件优化
           FastClick.attach(document.body);
@@ -47,11 +47,17 @@
 
           //查看订单
           $(document).on('click', '#orderDetail', function(){
-              var that=this;
+              //是否是商城
+              var detailParam;
+              if(/healthcloud-shop-h5/.test(requestUrl)){
+                  detailParam="orderId";
+              }else{
+                  detailParam="pay_code";
+              }
               NativeFunc({
                   ACTION: "OPENURL",
                   PARAM: {
-                      URL: requestUrl +"/orderDetail.html?orderId="+getParams("orderId")//页面路径必须保证一样才能用这页
+                      URL: requestUrl +"/orderDetail.html?"+detailParam+"="+getParams(detailParam)//页面路径必须保证一样才能用这页
                   }
               })
           });

@@ -1,0 +1,286 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>支付结果</title>
+    <link rel="stylesheet" type="text/css" href="../lib/css/weui.min.css" />
+    <link rel="stylesheet" type="text/css" href="../lib/css/jquery-weui.css" />
+    <link rel="stylesheet" type="text/css" href="../custom/css/common.css" />
+    <link rel="stylesheet" type="text/css" href="../custom/css/manage.css" />
+
+</head>
+
+<body>
+    <div class="popup-wrap" style="display:block;">
+        <div class="lightbox"></div>
+        <div class="popup-con popup-con-middle">
+            <!--<span class="close"></span>-->
+            <p class="popup-txt">请确认微信支付是否已完成？</p>
+            <div class="popup-btmbtn"><span class="preRepay">重新支付</span><span class="ok">支付已完成</span></div>
+        </div>
+    </div>
+    <div class="container manageContainer">
+        <div class="no-data-box" id="ask">
+            <div class="custom-nodata">
+                <img src="../custom/images/order/success.png" style="width:3.293333rem;height: 2.88rem;">
+            </div>
+        </div>
+        <div class="no-data-box" style="display:none;" id="success">
+            <div class="custom-nodata">
+                <img src="../custom/images/order/success.png" style="width:3.293333rem;height: 2.88rem;">
+                <p class="largeTxt">支付成功~</p>
+            </div>
+            <div class="btn-box">
+                <span id="toIndex">返回商城</span><span id="orderDetail">查看订单</span>
+            </div>
+        </div>
+        <div class="no-data-box" style="display:none;" id="fail">
+            <div class="custom-nodata">
+                <img src="../custom/images/order/fail.png" style="width:3.293333rem;height: 2.706667rem;">
+                <p class="largeTxt">支付失败</p>
+            </div>
+            <div class="btn-box">
+                <span class="repay">重新支付</span>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="../lib/js/flexible.js"></script>
+    <script type="text/javascript" src="../lib/js/fastclick.min.js"></script>
+    <script type="text/javascript" src="../lib/js/jquery.min.js"></script>
+    <script src="../lib/js/jquery-weui.js"></script>
+    <script type="text/javascript" src="../custom/js/native.js"></script>
+    <script type="text/javascript" src="../custom/js/common.js"></script>
+    <script src="../custom/js/myTips.js"></script>
+    <script src="../custom/js/api.js"></script>
+    <script>
+        $(function () {
+            //click事件优化
+            FastClick.attach(document.body);
+
+            var netToken = localStorage.getItem('netToken');
+            var requestUrl = localStorage.getItem('requestUrl');
+            var channelCode = localStorage.getItem('channelCode');
+            var lightAppCode = localStorage.getItem('lightAppCode');
+            var shopUserId = localStorage.getItem('shopUserId');
+            var isNative=localStorage.getItem('isNative');
+            //支付相关url前段
+            var paymentRequestUrl=localStorage.getItem('paymentRequestUrl');
+
+            var businessNo = localStorage.getItem("businessNo");
+
+            $(".ok").on("click", function () {
+                getResult();
+            })
+            $(".preRepay").on("click", function () {
+                showMyloading();
+                try {
+                    $.ajax({
+                        url: ajaxUrl.queryPayStatusCommon,
+                        type: "post",
+                        contentType: 'application/json',
+                        beforeSend: function (request) {
+                            request.setRequestHeader("token", netToken);
+                            request.setRequestHeader("channelCode", channelCode);
+                            request.setRequestHeader("lightAppCode", lightAppCode);
+                            request.setRequestHeader('timestamp', new Date().getTime());
+                        },
+                        data: JSON.stringify({
+                            "biz_id": localStorage.getItem("payBusinessNo"),
+                            "business_no": businessNo,
+                            "uid": localStorage.getItem('jkyUid'),
+                        }),
+                        success: function (firstData) {
+                            if (firstData.code == 0) {
+                                if (firstData.data.status == 1) {
+                                    $(".mytip").html("您已支付成功,请勿重复支付");
+                                    showMyTip();
+                                    setTimeout(function () {
+                                        $(".popup-wrap").hide();
+                                        $("#ask").hide();
+                                        $("#success").show();
+                                        //跳首页
+                                        $(document).on('click', '#toIndex', function () {
+                                            if(isNative==1){
+                                                //回到第一个webview
+                                                //是否是商城(配在底部tab)
+                                                var index;
+                                                if(/healthcloud-shop-h5/.test(firstData.data.order_item_url)){
+                                                    index=-9;
+                                                }else{
+                                                    index=-1;
+                                                }
+                                                NativeFunc({
+                                                    ACTION: 'CLOSEPAGE',
+                                                    PARAM: {
+                                                        INDEX: index
+                                                    }
+                                                });
+                                            }else {
+                                                if(!localStorage.getItem("indexUrl")){
+                                                    NativeFunc({
+                                                        ACTION: "OPENURL",
+                                                        PARAM: {
+                                                            URL: requestUrl +"/index.html?noFirst=1&forbidden=1"
+                                                        }
+                                                    })
+                                                }else{
+                                                    NativeFunc({
+                                                        ACTION: "OPENURL",
+                                                        PARAM: {
+                                                            URL: localStorage.getItem("indexUrl") + "&noFirst=1"
+                                                        }
+                                                    })
+                                                }
+                                            }
+                                        });
+                                        //查看订单
+                                        $(document).on('click', '#orderDetail', function () {
+                                            NativeFunc({
+                                                ACTION: "OPENURL",
+                                                PARAM: {
+                                                    URL: firstData.data.order_item_url+"?orderId=" + localStorage.getItem("orderId")
+                                                }
+                                            })
+                                        });
+                                    },1500)
+                                } else if ( firstData.data.status == 0) {
+                                    NativeFunc({
+                                        ACTION: "OPENURL",
+                                        PARAM: {
+                                            URL: paymentRequestUrl + "/orderPay.html?forPage=2&orderId=" + localStorage.getItem("orderId") + "&totalFee=" + localStorage.getItem("amount")
+                                        }
+                                    })
+                                }
+                                hideMyloading();
+                            } else if (firstData.code == 12) {
+                                $(".mytip").html("账户在其他设备登录,请重新登录");
+                                showMyTip();
+                                hideMyloading();
+                            } else {
+                                $(".mytip").html(firstData.msg || "查询支付状态失败");
+                                showMyTip();
+                                hideMyloading();
+                            }
+                        },
+                        error: function (error) {
+                            hideMyloading();
+                            console.log(error)
+                            showMyTip();
+                        }
+                    })
+                } catch (e) {
+                    hideMyloading();
+                    showMyTip();
+                    console.log(e);
+                }
+            })
+            function getResult() {
+                showMyloading();
+                try {
+                    $.ajax({
+                        url: ajaxUrl.queryPayStatusCommon,
+                        type: "post",
+                        contentType: 'application/json',
+                        beforeSend: function (request) {
+                            request.setRequestHeader("token", netToken);
+                            request.setRequestHeader("channelCode", channelCode);
+                            request.setRequestHeader("lightAppCode", lightAppCode);
+                            request.setRequestHeader('timestamp', new Date().getTime());
+                        },
+                        data: JSON.stringify({
+                            "biz_id": localStorage.getItem("payBusinessNo"),
+                            "business_no": businessNo,
+                            "uid": localStorage.getItem('jkyUid'),
+                        }),
+                        success: function (firstData) {
+                            if (firstData.code == 0) {
+                                if (firstData.data.status == 1) {
+                                    $(".popup-wrap").hide();
+                                    $("#ask").hide();
+                                    $("#success").show();
+                                    //跳首页
+                                    $(document).on('click', '#toIndex', function () {
+                                        if(isNative==1){
+                                            //回到第一个webview
+                                            //是否是商城(配在底部tab)
+                                            var index;
+                                            if(/healthcloud-shop-h5/.test(firstData.data.order_item_url)){
+                                                index=-9;
+                                            }else{
+                                                index=-1;
+                                            }
+                                            NativeFunc({
+                                                ACTION: 'CLOSEPAGE',
+                                                PARAM: {
+                                                    INDEX: index
+                                                }
+                                            });
+                                        }else {
+                                            if(!localStorage.getItem("indexUrl")){
+                                                NativeFunc({
+                                                    ACTION: "OPENURL",
+                                                    PARAM: {
+                                                        URL: requestUrl +"/index.html?noFirst=1&forbidden=1"
+                                                    }
+                                                })
+                                            }else{
+                                                NativeFunc({
+                                                    ACTION: "OPENURL",
+                                                    PARAM: {
+                                                        URL: localStorage.getItem("indexUrl") + "&noFirst=1"
+                                                    }
+                                                })
+                                            }
+                                        }
+                                    });
+                                    //查看订单
+                                    $(document).on('click', '#orderDetail', function () {
+                                        NativeFunc({
+                                            ACTION: "OPENURL",
+                                            PARAM: {
+                                                URL: firstData.data.order_item_url+"?orderId=" + localStorage.getItem("orderId")
+                                            }
+                                        })
+                                    });
+                                } else if ( firstData.data.status == 0||firstData.data.status == 2) {
+                                    $(".popup-wrap").hide();
+                                    $("#ask").hide();
+                                    $("#fail").show();
+                                    //重新支付
+                                    $(document).on('click', '.repay', function () {
+                                        NativeFunc({
+                                            ACTION: "OPENURL",
+                                            PARAM: {
+                                                URL: paymentRequestUrl + "/orderPay.html?forPage=2&orderId=" + localStorage.getItem("orderId") + "&totalFee=" + localStorage.getItem("amount")
+                                            }
+                                        })
+                                    });
+                                }
+                            } else if (firstData.code == 12) {
+                                $(".mytip").html("账户在其他设备登录,请重新登录");
+                                showMyTip();
+                            } else {
+                                $(".mytip").html(firstData.msg || "查询支付状态失败");
+                                showMyTip();
+                            }
+                            hideMyloading();
+                        },
+                        error: function (error) {
+                            hideMyloading();
+                            console.log(error)
+                            showMyTip();
+                        }
+                    })
+                } catch (e) {
+                    hideMyloading();
+                    showMyTip();
+                    console.log(e);
+                }
+            }
+        })  
+    </script>
+
+</body>
+
+</html>

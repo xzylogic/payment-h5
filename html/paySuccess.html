@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>支付结果</title>
+  <link rel="stylesheet" type="text/css" href="../lib/css/weui.min.css" />
+  <link rel="stylesheet" type="text/css" href="../lib/css/jquery-weui.css" />
+  <link rel="stylesheet" type="text/css" href="../custom/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="../custom/css/manage.css" />
+
+</head>
+
+<body>
+	<div class="container manageContainer">
+    <div class="no-data-box" id="success">
+      <div class="custom-nodata">
+        <img src="../custom/images/order/success.png" style="width:3.293333rem;height: 2.88rem;">
+        <p class="largeTxt">支付成功~</p>
+      </div>
+      <div class="btn-box">
+          <span id="toIndex">返回商城</span><span id="orderDetail">查看订单</span>
+        </div>
+    </div>
+  </div>
+  <script type="text/javascript" src="../lib/js/flexible.js"></script>
+  <script type="text/javascript" src="../lib/js/fastclick.min.js"></script>
+  <script type="text/javascript" src="../lib/js/jquery.min.js"></script>
+  <script src="../lib/js/jquery-weui.js"></script>
+  <script type="text/javascript" src="../custom/js/native.js"></script>
+  <script type="text/javascript" src="../custom/js/common.js"></script>
+  <script src="../custom/js/myTips.js"></script>
+  <script src="../custom/js/api.js"></script>
+  <script>
+      $(function () {
+          //!!!!
+          //这个页面是0元订单不走支付,创建业务订单后,直接跳转,所以不能查段斌的接口,因此如果要用这个页面,必须保证原项目中已经localStorage.setItem('requestUrl'),且查看订单页面路径必须保证一样才能用这页;
+          // !!!
+          //click事件优化
+          FastClick.attach(document.body);
+
+          var netToken = localStorage.getItem('netToken');
+          var requestUrl= localStorage.getItem('requestUrl');
+          var channelCode= localStorage.getItem('channelCode');
+          var lightAppCode=localStorage.getItem('lightAppCode');
+          var shopUserId= localStorage.getItem('shopUserId');
+          var isNative=localStorage.getItem('isNative');
+
+          //查看订单
+          $(document).on('click', '#orderDetail', function(){
+              var that=this;
+              NativeFunc({
+                  ACTION: "OPENURL",
+                  PARAM: {
+                      URL: requestUrl +"/orderDetail.html?orderId="+getParams("orderId")//页面路径必须保证一样才能用这页
+                  }
+              })
+          });
+
+          //跳首页
+          $(document).on('click', '#toIndex', function(){
+              if(isNative==1){
+                  //回到第一个webview
+                  //是否是商城(配在底部tab)
+                  var index;
+                  if(/healthcloud-shop-h5/.test(requestUrl)){
+                      index=-9;
+                  }else{
+                      index=-1;
+                  }
+                  NativeFunc({
+                      ACTION: 'CLOSEPAGE',
+                      PARAM: {
+                          INDEX: index
+                      }
+                  });
+              }else {
+                  if(!localStorage.getItem("indexUrl")){
+                      NativeFunc({
+                          ACTION: "OPENURL",
+                          PARAM: {
+                              URL: requestUrl +"/index.html?noFirst=1&forbidden=1"
+                          }
+                      })
+                  }else{
+                      NativeFunc({
+                          ACTION: "OPENURL",
+                          PARAM: {
+                              URL: localStorage.getItem("indexUrl") + "&noFirst=1"
+                          }
+                      })
+                  }
+              }
+          });
+      })  
+  </script>  
+
+</body>
+</html>

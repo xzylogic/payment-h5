@@ -1,0 +1,226 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>支付订单</title>
+    <link rel="stylesheet" type="text/css" href="../lib/css/weui.min.css" />
+    <link rel="stylesheet" type="text/css" href="../lib/css/jquery-weui.css" />
+    <link rel="stylesheet" type="text/css" href="../custom/css/common.css" />
+    <link rel="stylesheet" type="text/css" href="../custom/css/manage.css" />
+
+</head>
+
+<body>
+<div class="container manageContainer">
+    <div class="order-pay-wrap">
+        <p class="custom-top-tips">
+            该订单将为您保留60分钟，请尽快完成支付~
+        </p>
+        <div class="total-box">
+            订单金额<span>￥</span>
+        </div>
+        <p class="border-top"></p>
+        <div class="pay-way">
+            <h5>支付方式</h5>
+            <ul class="pay-way-list">
+                <li id="alipay">
+                    <img src="../custom/images/order/apliy.png">
+                    <span>支付宝支付</span>
+                    <label class="custom_check_label checkRadio">
+                        <input type="checkbox" name="" id="radio1" value="1" hidden />
+                        <label for="radio1" class="icon-check"></label>
+                    </label>
+                </li>
+                <!--<li id="wechat">-->
+                    <!--<img src="../custom/images/order/wx.png">-->
+                    <!--<span>微信支付</span>-->
+                    <!--<label class="custom_check_label">-->
+                        <!--<input type="checkbox" name="" id="radio2" value="1" hidden />-->
+                        <!--<label for="radio2" class="icon-check"></label>-->
+                    <!--</label>-->
+                <!--</li>-->
+            </ul>
+        </div>
+    </div>
+    <div class="custom-btm-fixed">
+        <span class="custom-btm-btn">支付</span>
+    </div>
+</div>
+<script type="text/javascript" src="../lib/js/flexible.js"></script>
+<script type="text/javascript" src="../lib/js/fastclick.min.js"></script>
+<script type="text/javascript" src="../lib/js/jquery.min.js"></script>
+<script src="../lib/js/jquery-weui.js"></script>
+<script type="text/javascript" src="../custom/js/native.js"></script>
+<script type="text/javascript" src="../custom/js/common.js"></script>
+<script src="../custom/js/myTips.js"></script>
+<script src="../custom/js/api.js"></script>
+<script type="text/javascript" src="https://pv.sohu.com/cityjson?ie=utf-8"></script>
+<script>
+    $(function () {
+        var hasWx=true;
+        var forPage=getParams("forPage");
+        //从我的订单直接进入支付页面，不需要连续关闭两个页面
+        if(forPage=='0'){
+            //IOS 直接返回一个Webview 无论有多少页内跳转(等ios发布之后注释放开，不然index:100时 ios闪退)
+             if(nativeObj.frameType=='0'){
+                 setTimeout(function () {
+                     NativeFunc({
+                         ACTION: "BACKMODE",
+                         PARAM: {
+                             INDEX: "100"
+                         }
+                     })
+                 },100);
+             }
+        } else if(forPage=='2'){
+            setTimeout(function () {
+                NativeFunc({
+                    ACTION: "BACKMODE",
+                    PARAM: {
+                        INDEX: "2"
+                    }
+                })
+            },100);
+        }else{
+            setTimeout(function () {
+                NativeFunc({
+                    ACTION: "BACKMODE",
+                    PARAM: {
+                        INDEX: "1"
+                    }
+                })
+            },100);
+        }
+        setTimeout(function () {
+            NativeFunc({
+                ACTION: "CHECK_WECHAT_ALIPAY",
+                PARAM: {
+                    MODE: "GET"
+                }
+            }, function (response) {
+                if(response) {
+                    var objResp = JSON.parse(response);
+                    if(objResp.wechat==0){
+                        hasWx=false;
+                    }
+                    // {
+                    //     wechat:0
+                    //     alipay:1
+                    // }
+                }
+            });
+        },100)
+        //click事件优化
+        FastClick.attach(document.body);
+
+        var netToken = localStorage.getItem('netToken');
+        var requestUrl= localStorage.getItem('requestUrl');
+        var channelCode= localStorage.getItem('channelCode');
+        var lightAppCode=localStorage.getItem('lightAppCode');
+        var shopUserId= localStorage.getItem('shopUserId');
+        var isNative=localStorage.getItem('isNative');
+
+        //支付相关url前段
+        var paymentRequestUrl=localStorage.getItem('paymentRequestUrl');
+        //订单金额和订单id
+        var orderId=getParams("orderId");
+        localStorage.setItem("orderId",orderId);
+        var totalFee=Number(getParams("totalFee")).toFixed(2);
+        $(".total-box span").html("￥"+totalFee);
+        var newTab;
+        //操作系统
+        var ua = navigator.userAgent;
+        var os;
+        if (ua.toLowerCase().indexOf("iphone") > -1||ua.toLowerCase().indexOf("ipad") > -1) {
+            os="ios";
+        }else{
+            os="android";
+        }
+//        //支付宝
+//        $("#alipay").on("click",function () {
+//            $("#alipay label")[0].addClass("checkRadio");
+//            $("#wechat label")[0].removeClass("checkRadio");
+//        })
+//        //微信支付
+//        $("#wechat").on("click",function () {
+//            $("#wechat label")[0].addClass("checkRadio");
+//            $("#alipay label")[0].removeClass("checkRadio");
+//        })
+        //支付
+        var checkedWay="";
+        $(".custom-btm-btn").on("click",function (){
+            if($("#alipay label").hasClass("checkRadio")){
+                checkedWay="alipay"
+            }else if($("#wechat label").hasClass("checkRadio")){
+                checkedWay="wechat"
+            }
+            if(checkedWay==""){
+                $(".mytip").html("请选择支付方式");
+                showMyTip();
+                return;
+            }
+            if(checkedWay=="wechat"&&hasWx==false){
+                $(".mytip").html("微信未安装");
+                showMyTip();
+                return;
+            }
+            //调接口创建支付信息
+            showMyloading();
+            // newTab=window.open();
+            // console.log(newTab)
+//            var createPayResponse;
+            $.ajax({
+                url:ajaxUrl.createPay,
+                type:"post",
+//                async:false,
+                contentType: 'application/json',
+                beforeSend: function(request) {
+                    request.setRequestHeader("token",netToken);
+                    request.setRequestHeader("channelCode",channelCode);
+                    request.setRequestHeader("lightAppCode",lightAppCode);
+                    request.setRequestHeader('timestamp', new Date().getTime());
+                },
+                data:JSON.stringify({
+//                    "merchantId": "3101180001",//待定
+//                    "merchantName": "健康云健康商城",//待定
+                    "money": totalFee,
+                    "orderId": orderId,
+                    "payType": checkedWay=="alipay"?"alipay_scancd":"wechat_scancd",
+                    "shopUserId":shopUserId,
+                    "uid":localStorage.getItem('jkyUid'),
+                    "clientIp":returnCitySN.cip,
+                    "os": os
+                }),
+                success:function(firstData){
+                    if(firstData.code==0){
+                        localStorage.setItem("payBusinessNo",firstData.data.payBusinessNo);//商户号
+                        localStorage.setItem("businessNo",firstData.data.paymentId);
+                        localStorage.setItem("amount",Number(totalFee).toFixed(2));
+                        if(checkedWay=="alipay"){
+                            document.write(firstData.data.h5);
+                        }else{
+                            localStorage.setItem("payRes",firstData.data.h5)
+                            NativeFunc({
+                                ACTION: "OPENURL",
+                                PARAM: {
+                                    URL: paymentRequestUrl +"/blank.html"
+                                }
+                            })
+                        }
+                    }else{
+                        $(".mytip").html(firstData.msg||"创建支付信息接口出错");
+                        showMyTip();
+                        hideMyloading();
+                    }
+                },
+                error:function(error){
+                    showMyTip();
+                    hideMyloading();
+                }
+            });
+        })
+
+    })
+</script>
+</body>
+</html>

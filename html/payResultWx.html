@@ -136,10 +136,17 @@
                                         });
                                         //查看订单
                                         $(document).on('click', '#orderDetail', function () {
+                                            //是否是商城
+                                            var detailParam;
+                                            if(/healthcloud-shop-h5/.test(firstData.data.order_item_url)){
+                                                detailParam="orderId";
+                                            }else{
+                                                detailParam="pay_code";
+                                            }
                                             NativeFunc({
                                                 ACTION: "OPENURL",
                                                 PARAM: {
-                                                    URL: firstData.data.order_item_url+"?orderId=" + localStorage.getItem("orderId")
+                                                    URL: firstData.data.order_item_url+"?"+detailParam+"=" + localStorage.getItem(detailParam)
                                                 }
                                             })
                                         });
@@ -236,10 +243,17 @@
                                     });
                                     //查看订单
                                     $(document).on('click', '#orderDetail', function () {
+                                        //是否是商城
+                                        var detailParam;
+                                        if(/healthcloud-shop-h5/.test(firstData.data.order_item_url)){
+                                            detailParam="orderId";
+                                        }else{
+                                            detailParam="pay_code";
+                                        }
                                         NativeFunc({
                                             ACTION: "OPENURL",
                                             PARAM: {
-                                                URL: firstData.data.order_item_url+"?orderId=" + localStorage.getItem("orderId")
+                                                URL: firstData.data.order_item_url+"?"+detailParam+"=" + localStorage.getItem(detailParam)
                                             }
                                         })
                                     });

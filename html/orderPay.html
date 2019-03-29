@@ -10,7 +10,7 @@
 
 </head>
 
-<body>
+<body style="display: none;">
 <div class="container manageContainer">
     <div class="order-pay-wrap">
         <p class="custom-top-tips">
@@ -23,22 +23,22 @@
         <div class="pay-way">
             <h5>支付方式</h5>
             <ul class="pay-way-list">
-                <li id="alipay">
+                <li id="alipay" style="display: none;">
                     <img src="../custom/images/order/apliy.png">
                     <span>支付宝支付</span>
-                    <label class="custom_check_label checkRadio">
+                    <label class="custom_check_label">
                         <input type="checkbox" name="" id="radio1" value="1" hidden />
                         <label for="radio1" class="icon-check"></label>
                     </label>
                 </li>
-                <!--<li id="wechat">-->
-                    <!--<img src="../custom/images/order/wx.png">-->
-                    <!--<span>微信支付</span>-->
-                    <!--<label class="custom_check_label">-->
-                        <!--<input type="checkbox" name="" id="radio2" value="1" hidden />-->
-                        <!--<label for="radio2" class="icon-check"></label>-->
-                    <!--</label>-->
-                <!--</li>-->
+                <li id="wechat" style="display: none;">
+                    <img src="../custom/images/order/wx.png">
+                    <span>微信支付</span>
+                    <label class="custom_check_label">
+                        <input type="checkbox" name="" id="radio2" value="1" hidden />
+                        <label for="radio2" class="icon-check"></label>
+                    </label>
+                </li>
             </ul>
         </div>
     </div>
@@ -122,9 +122,13 @@
 
         //支付相关url前段
         var paymentRequestUrl=localStorage.getItem('paymentRequestUrl');
-        //订单金额和订单id
+        //订单id
         var orderId=getParams("orderId");
         localStorage.setItem("orderId",orderId);
+        //商户号
+        var payBusinessNo=getParams("payBusinessNo");
+        localStorage.setItem("payBusinessNo",payBusinessNo);
+        //金额
         var totalFee=Number(getParams("totalFee")).toFixed(2);
         $(".total-box span").html("￥"+totalFee);
         var newTab;
@@ -136,16 +140,55 @@
         }else{
             os="android";
         }
-//        //支付宝
-//        $("#alipay").on("click",function () {
-//            $("#alipay label")[0].addClass("checkRadio");
-//            $("#wechat label")[0].removeClass("checkRadio");
-//        })
-//        //微信支付
-//        $("#wechat").on("click",function () {
-//            $("#wechat label")[0].addClass("checkRadio");
-//            $("#alipay label")[0].removeClass("checkRadio");
-//        })
+        getPayWayAndPay();
+        function getPayWayAndPay() {
+            showMyloading();
+            $.ajax({
+                url:ajaxUrl.paymentInfo,
+                type:"post",
+//                async:false,
+                contentType: 'application/json',
+                beforeSend: function(request) {
+                    request.setRequestHeader("token",netToken);
+                    request.setRequestHeader("channelCode",channelCode);
+                    request.setRequestHeader("lightAppCode",lightAppCode);
+                    request.setRequestHeader('timestamp', new Date().getTime());
+                },
+                data:JSON.stringify({
+                    "business_no": orderId,
+                    "biz_id": payBusinessNo
+                }),
+                success:function(data){
+                    if(data.code==0){
+                        $("body").show();
+                        if(data.data.paymentChannel.split(",").indexOf("1")>-1){
+                            $("#alipay").show();
+                        }
+                        if(data.data.paymentChannel.split(",").indexOf("2")>-1){
+                            $("#wechat").show();
+                        }
+                    }else{
+                        $(".mytip").html(data.msg||"创建支付信息接口出错");
+                        showMyTip();
+                    }
+                    hideMyloading();
+                },
+                error:function(error){
+                    showMyTip();
+                    hideMyloading();
+                }
+            });
+        }
+        //支付宝
+        $(document).on('click', '#alipay', function(){
+            $("#alipay label")[0].addClass("checkRadio");
+            $("#wechat label")[0].removeClass("checkRadio");
+        });
+        //微信支付
+        $(document).on('click', '#wechat', function(){
+            $("#wechat label")[0].addClass("checkRadio");
+            $("#alipay label")[0].removeClass("checkRadio");
+        });
         //支付
         var checkedWay="";
         $(".custom-btm-btn").on("click",function (){
@@ -166,11 +209,8 @@
             }
             //调接口创建支付信息
             showMyloading();
-            // newTab=window.open();
-            // console.log(newTab)
-//            var createPayResponse;
             $.ajax({
-                url:ajaxUrl.createPay,
+                url:ajaxUrl.paymentAgent,
                 type:"post",
 //                async:false,
                 contentType: 'application/json',
@@ -181,25 +221,20 @@
                     request.setRequestHeader('timestamp', new Date().getTime());
                 },
                 data:JSON.stringify({
-//                    "merchantId": "3101180001",//待定
-//                    "merchantName": "健康云健康商城",//待定
-                    "money": totalFee,
-                    "orderId": orderId,
-                    "payType": checkedWay=="alipay"?"alipay_scancd":"wechat_scancd",
-                    "shopUserId":shopUserId,
-                    "uid":localStorage.getItem('jkyUid'),
-                    "clientIp":returnCitySN.cip,
-                    "os": os
+                    "client_ip": returnCitySN.cip,
+                    "biz_id": payBusinessNo,
+                    "business_no": orderId,
+                    "os": os,
+                    "pay_type": checkedWay,
+                    "uid":localStorage.getItem('jkyUid')
                 }),
                 success:function(firstData){
                     if(firstData.code==0){
-                        localStorage.setItem("payBusinessNo",firstData.data.payBusinessNo);//商户号
-                        localStorage.setItem("businessNo",firstData.data.paymentId);
                         localStorage.setItem("amount",Number(totalFee).toFixed(2));
                         if(checkedWay=="alipay"){
-                            document.write(firstData.data.h5);
+                            document.write(firstData.data);
                         }else{
-                            localStorage.setItem("payRes",firstData.data.h5)
+                            localStorage.setItem("payRes",firstData.data)
                             NativeFunc({
                                 ACTION: "OPENURL",
                                 PARAM: {

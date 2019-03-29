@@ -39,9 +39,11 @@ var ajaxUrl= {
 	cancelFav:ajaxRoot + "shopCollectCancel",
 	getDefAddress: ajaxRoot + "shopAddressDefault", // 获取默认地址
 	createOrder:ajaxRoot + "shopOrderCreate",//创建订单
-	scanConsume:ajaxRoot +"payAgent",//万达付款????
+	paymentAgent:ajaxRoot +"paymentAgent",//新支付代理
+	paymentInfo:ajaxRoot +"paymentInfo",//查询商户支持哪些支付方式
 	queryPayStatus:ajaxRoot +"shopPaymentPayStatus",//单项目查询接口
-	queryPayStatusCommon:ajaxRoot +"queryPayStatus",//公共查询
+	// queryPayStatusCommon:ajaxRoot +"queryPayStatus",//公共查询
+	payAgentQueryPayStatus:ajaxRoot +"payAgentQueryPayStatus",
 	sendPayStatus:ajaxRoot +"shopPaymentsCallback",
 	createPay:ajaxRoot +"shopPaymentsCreate",
 	getHadBuyNum:ajaxRoot + "shopGoodsHadBuyNum",//已购买数量

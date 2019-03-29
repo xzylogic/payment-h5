@@ -54,11 +54,12 @@
             //支付相关url前段
             var paymentRequestUrl=localStorage.getItem('paymentRequestUrl');
 
-            var businessNo = localStorage.getItem("businessNo");
+            var orderId = localStorage.getItem("orderId");//订单id
+            var payBusinessNo=localStorage.setItem("payBusinessNo");//商户号
             showMyloading();
             try {
                 $.ajax({
-                    url: ajaxUrl.queryPayStatusCommon,
+                    url: ajaxUrl.payAgentQueryPayStatus,
                     type: "post",
                     contentType: 'application/json',
                     beforeSend: function (request) {
@@ -68,14 +69,13 @@
                         request.setRequestHeader('timestamp', new Date().getTime());
                     },
                     data: JSON.stringify({
-                        "biz_id": localStorage.getItem("payBusinessNo"),
-                        "business_no": businessNo,
+                        "biz_id": payBusinessNo,
+                        "business_no": orderId,
                         "uid": localStorage.getItem('jkyUid'),
-//                        "shopUserId":shopUserId
                     }),
                     success: function (firstData) {
                         if (firstData.code == 0) {
-                            if (firstData.data.status == 1) {
+                            if (firstData.data.status == 0) {
                                 $("#success").show();
                                 //跳首页
                                 $(document).on('click', '#toIndex', function () {
@@ -129,7 +129,7 @@
                                         }
                                     })
                                 });
-                            } else if ( firstData.data.status == 0||firstData.data.status == 2) {
+                            } else{
                                 $("#fail").show();
                                 //重新支付
                                 $(document).on('click', '.repay', function () {

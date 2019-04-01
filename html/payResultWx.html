@@ -68,6 +68,7 @@
             var paymentRequestUrl=localStorage.getItem('paymentRequestUrl');
 
             var businessNo = localStorage.getItem("businessNo");
+            var orderNo = localStorage.getItem("order_no");//支付单id
 
             $(".ok").on("click", function () {
                 getResult();
@@ -86,9 +87,10 @@
                             request.setRequestHeader('timestamp', new Date().getTime());
                         },
                         data: JSON.stringify({
-                            "biz_id": localStorage.getItem("payBusinessNo"),
-                            "business_no": businessNo,
-                            "uid": localStorage.getItem('jkyUid'),
+                            // "biz_id": localStorage.getItem("payBusinessNo"),
+                            // "business_no": businessNo,
+                            // "uid": localStorage.getItem('jkyUid'),
+                            "orderPayNo":orderNo
                         }),
                         success: function (firstData) {
                             if (firstData.code == 0) {

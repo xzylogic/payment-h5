@@ -125,6 +125,9 @@
         //订单id
         var orderId=getParams("orderId");
         localStorage.setItem("orderId",orderId);
+        //支付单id
+        var orderNo=getParams("orderNo");
+        localStorage.setItem("orderNo",orderNo);
         //商户号
         var payBusinessNo=getParams("payBusinessNo");
         localStorage.setItem("payBusinessNo",payBusinessNo);
@@ -154,10 +157,15 @@
                     request.setRequestHeader("lightAppCode",lightAppCode);
                     request.setRequestHeader('timestamp', new Date().getTime());
                 },
-                data:JSON.stringify({
-                    "business_no": orderId,
-                    "biz_id": payBusinessNo
-                }),
+                data:JSON.stringify(
+                    // {
+                    //     "business_no": orderId,
+                    //     "biz_id": payBusinessNo
+                    // }
+                    {
+                        "payment_no": orderNo
+                    }
+                ),
                 success:function(data){
                     if(data.code==0){
                         $("body").show();
@@ -222,8 +230,9 @@
                 },
                 data:JSON.stringify({
                     "client_ip": returnCitySN.cip,
-                    "biz_id": payBusinessNo,
-                    "business_no": orderId,
+                    "payment_no": orderNo,
+                    // "biz_id": payBusinessNo,
+                    // "business_no": orderId,
                     "os": os,
                     "pay_type": checkedWay,
                     "uid":localStorage.getItem('jkyUid')

@@ -55,6 +55,7 @@
             var paymentRequestUrl=localStorage.getItem('paymentRequestUrl');
 
             var orderId = localStorage.getItem("orderId");//订单id
+            var orderNo = localStorage.getItem("orderNo");//支付订单id
             var payBusinessNo=localStorage.setItem("payBusinessNo");//商户号
             showMyloading();
             try {
@@ -69,13 +70,14 @@
                         request.setRequestHeader('timestamp', new Date().getTime());
                     },
                     data: JSON.stringify({
-                        "biz_id": payBusinessNo,
-                        "business_no": orderId,
-                        "uid": localStorage.getItem('jkyUid'),
+                        "orderPayNo":orderNo
+                        // "biz_id": payBusinessNo,
+                        // "business_no": orderId,
+                        // "uid": localStorage.getItem('jkyUid'),
                     }),
                     success: function (firstData) {
                         if (firstData.code == 0) {
-                            if (firstData.data.status == 0) {
+                            if (firstData.data.status == 1) {
                                 $("#success").show();
                                 //跳首页
                                 $(document).on('click', '#toIndex', function () {
@@ -137,7 +139,7 @@
                                     NativeFunc({
                                         ACTION: "OPENURL",
                                         PARAM: {
-                                            URL: paymentRequestUrl + "/orderPay.html?forPage=2&orderId=" + localStorage.getItem("orderId") + "&totalFee=" + localStorage.getItem("amount")
+                                            URL: paymentRequestUrl + "/orderPay.html?forPage=2&orderId=" + localStorage.getItem("orderId") + "&orderNo=" + localStorage.getItem("orderNo") + "&totalFee=" + localStorage.getItem("amount")
                                         }
                                     })
                                 });

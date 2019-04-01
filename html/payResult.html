@@ -55,7 +55,9 @@
             var paymentRequestUrl=localStorage.getItem('paymentRequestUrl');
 
             var orderId = localStorage.getItem("orderId");//订单id
-            var orderNo = localStorage.getItem("orderNo");//支付订单id
+            // var orderNo = localStorage.getItem("orderNo");//支付单id
+            var orderNo = getParams("out_trade_no");//支付单id
+
             var payBusinessNo=localStorage.setItem("payBusinessNo");//商户号
             showMyloading();
             try {
@@ -139,7 +141,7 @@
                                     NativeFunc({
                                         ACTION: "OPENURL",
                                         PARAM: {
-                                            URL: paymentRequestUrl + "/orderPay.html?forPage=2&orderId=" + localStorage.getItem("orderId") + "&orderNo=" + localStorage.getItem("orderNo") + "&totalFee=" + localStorage.getItem("amount")
+                                            URL: paymentRequestUrl + "/orderPay.html?forPage=2&orderId=" + localStorage.getItem("orderId") + "&orderNo=" + orderNo + "&totalFee=" + localStorage.getItem("amount")
                                         }
                                     })
                                 });

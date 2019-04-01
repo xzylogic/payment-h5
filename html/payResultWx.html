@@ -77,7 +77,8 @@
                 showMyloading();
                 try {
                     $.ajax({
-                        url: ajaxUrl.payAgentQueryPayStatus,
+                        // url: ajaxUrl.payAgentQueryPayStatus,
+                        url: ajaxUrl.payAgentPayNotifyStatus,
                         type: "post",
                         contentType: 'application/json',
                         beforeSend: function (request) {

@@ -44,6 +44,7 @@ var ajaxUrl= {
 	queryPayStatus:ajaxRoot +"shopPaymentPayStatus",//单项目查询接口
 	// queryPayStatusCommon:ajaxRoot +"queryPayStatus",//公共查询
 	payAgentQueryPayStatus:ajaxRoot +"payAgentQueryPayStatus",
+	payAgentPayNotifyStatus:ajaxRoot +"payAgentPayNotifyStatus",//新接口，查询支付状态
 	sendPayStatus:ajaxRoot +"shopPaymentsCallback",
 	createPay:ajaxRoot +"shopPaymentsCreate",
 	getHadBuyNum:ajaxRoot + "shopGoodsHadBuyNum",//已购买数量

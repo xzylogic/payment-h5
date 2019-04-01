@@ -68,8 +68,14 @@
             var paymentRequestUrl=localStorage.getItem('paymentRequestUrl');
 
             var businessNo = localStorage.getItem("businessNo");
-            var orderNo = localStorage.getItem("order_no");//支付单id
+            //var orderNo = localStorage.getItem("order_no");//支付单id
 
+            var payment_no = getParams("payment_no");
+            var orderNo = getParams("order_no");
+            if(orderNo){ }
+            else{
+                orderNo = payment_no;
+            }
             $(".ok").on("click", function () {
                 getResult();
             })

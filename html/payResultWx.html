@@ -163,7 +163,7 @@
                                     NativeFunc({
                                         ACTION: "OPENURL",
                                         PARAM: {
-                                            URL: paymentRequestUrl + "/orderPay.html?forPage=2&orderId=" + localStorage.getItem("orderId") + "&totalFee=" + localStorage.getItem("amount")
+                                            URL: paymentRequestUrl + "/orderPay.html?forPage=2&orderId=" + localStorage.getItem("orderId") + "&paymentNo=" + paymentNo + "&totalFee=" + localStorage.getItem("amount")
                                         }
                                     })
                                 }
@@ -276,7 +276,7 @@
                                         NativeFunc({
                                             ACTION: "OPENURL",
                                             PARAM: {
-                                                URL: paymentRequestUrl + "/orderPay.html?forPage=2&orderId=" + localStorage.getItem("orderId") + "&totalFee=" + localStorage.getItem("amount")
+                                                URL: paymentRequestUrl + "/orderPay.html?forPage=2&orderId=" + localStorage.getItem("orderId") + "&paymentNo=" + paymentNo + "&totalFee=" + localStorage.getItem("amount")
                                             }
                                         })
                                     });

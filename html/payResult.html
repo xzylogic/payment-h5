@@ -55,8 +55,7 @@
             var paymentRequestUrl=localStorage.getItem('paymentRequestUrl');
 
             var orderId = localStorage.getItem("orderId");//订单id
-            // var orderNo = localStorage.getItem("orderNo");//支付单id
-            var orderNo = getParams("out_trade_no");//支付单id
+            var paymentNo = getParams("out_trade_no");//支付单id
 
             // var payBusinessNo=localStorage.setItem("payBusinessNo");//商户号
             showMyloading();
@@ -73,7 +72,7 @@
                         request.setRequestHeader('timestamp', new Date().getTime());
                     },
                     data: JSON.stringify({
-                        "orderPayNo":orderNo
+                        "paymentNo":paymentNo
                         // "biz_id": payBusinessNo,
                         // "business_no": orderId,
                         // "uid": localStorage.getItem('jkyUid'),
@@ -88,7 +87,7 @@
                                         //回到第一个webview
                                         //是否是商城(配在底部tab)
                                         var index;
-                                        if(/healthcloud-shop-h5/.test(firstData.data.order_item_url)){
+                                        if(/healthcloud-shop-h5/.test(firstData.data.orderItemUrl)){
                                             index=-9;
                                         }else{
                                             index=-1;
@@ -122,7 +121,7 @@
                                     var that = this;
                                     //是否是商城
                                     var detailParam;
-                                    if(/healthcloud-shop-h5/.test(firstData.data.order_item_url)){
+                                    if(/healthcloud-shop-h5/.test(firstData.data.orderItemUrl)){
                                         detailParam="orderId";
                                     }else{
                                         detailParam="pay_code";
@@ -130,7 +129,7 @@
                                     NativeFunc({
                                         ACTION: "OPENURL",
                                         PARAM: {
-                                            URL: firstData.data.order_item_url+"?"+detailParam+"=" + localStorage.getItem(detailParam)
+                                            URL: firstData.data.orderItemUrl+"?"+detailParam+"=" + localStorage.getItem(detailParam)
                                         }
                                     })
                                 });
@@ -142,7 +141,7 @@
                                     NativeFunc({
                                         ACTION: "OPENURL",
                                         PARAM: {
-                                            URL: paymentRequestUrl + "/orderPay.html?forPage=2&orderId=" + localStorage.getItem("orderId") + "&orderNo=" + orderNo + "&totalFee=" + localStorage.getItem("amount")
+                                            URL: paymentRequestUrl + "/orderPay.html?forPage=2&orderId=" + localStorage.getItem("orderId") + "&paymentNo=" + paymentNo + "&totalFee=" + localStorage.getItem("amount")
                                         }
                                     })
                                 });

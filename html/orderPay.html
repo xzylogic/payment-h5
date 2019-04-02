@@ -126,8 +126,8 @@
         var orderId=getParams("orderId");
         localStorage.setItem("orderId",orderId);
         //支付单id
-        var orderNo=getParams("orderNo");
-        localStorage.setItem("orderNo",orderNo);
+        var paymentNo=getParams("paymentNo");
+        localStorage.setItem("paymentNo",paymentNo);
         //商户号
         var payBusinessNo=getParams("payBusinessNo");
         localStorage.setItem("payBusinessNo",payBusinessNo);
@@ -163,7 +163,7 @@
                     //     "biz_id": payBusinessNo
                     // }
                     {
-                        "payment_no": orderNo
+                        "paymentNo": paymentNo
                     }
                 ),
                 success:function(data){
@@ -229,12 +229,12 @@
                     request.setRequestHeader('timestamp', new Date().getTime());
                 },
                 data:JSON.stringify({
-                    "client_ip": returnCitySN.cip,
-                    "payment_no": orderNo,
+                    "clientIp": returnCitySN.cip,
+                    "paymentNo": paymentNo,
                     // "biz_id": payBusinessNo,
                     // "business_no": orderId,
                     "os": os,
-                    "pay_type": checkedWay,
+                    "payType": checkedWay,
                     "uid":localStorage.getItem('jkyUid')
                 }),
                 success:function(firstData){

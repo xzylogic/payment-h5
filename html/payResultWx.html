@@ -68,13 +68,12 @@
             var paymentRequestUrl=localStorage.getItem('paymentRequestUrl');
 
             var businessNo = localStorage.getItem("businessNo");
-            //var orderNo = localStorage.getItem("order_no");//支付单id
 
             var payment_no = getParams("payment_no");
-            var orderNo = getParams("order_no");
-            if(orderNo){ }
+            var paymentNo = getParams("order_no");//微信带入
+            if(paymentNo){ }
             else{
-                orderNo = payment_no;
+                paymentNo = payment_no;
             }
             $(".ok").on("click", function () {
                 getResult();
@@ -97,7 +96,7 @@
                             // "biz_id": localStorage.getItem("payBusinessNo"),
                             // "business_no": businessNo,
                             // "uid": localStorage.getItem('jkyUid'),
-                            "orderPayNo":orderNo
+                            "paymentNo":paymentNo
                         }),
                         success: function (firstData) {
                             if (firstData.code == 0) {
@@ -114,7 +113,7 @@
                                                 //回到第一个webview
                                                 //是否是商城(配在底部tab)
                                                 var index;
-                                                if(/healthcloud-shop-h5/.test(firstData.data.order_item_url)){
+                                                if(/healthcloud-shop-h5/.test(firstData.data.orderItemUrl)){
                                                     index=-9;
                                                 }else{
                                                     index=-1;
@@ -147,7 +146,7 @@
                                         $(document).on('click', '#orderDetail', function () {
                                             //是否是商城
                                             var detailParam;
-                                            if(/healthcloud-shop-h5/.test(firstData.data.order_item_url)){
+                                            if(/healthcloud-shop-h5/.test(firstData.data.orderItemUrl)){
                                                 detailParam="orderId";
                                             }else{
                                                 detailParam="pay_code";
@@ -155,7 +154,7 @@
                                             NativeFunc({
                                                 ACTION: "OPENURL",
                                                 PARAM: {
-                                                    URL: firstData.data.order_item_url+"?"+detailParam+"=" + localStorage.getItem(detailParam)
+                                                    URL: firstData.data.orderItemUrl+"?"+detailParam+"=" + localStorage.getItem(detailParam)
                                                 }
                                             })
                                         });
@@ -209,7 +208,7 @@
                             // "biz_id": localStorage.getItem("payBusinessNo"),
                             // "business_no": businessNo,
                             // "uid": localStorage.getItem('jkyUid'),
-                            "orderPayNo":orderNo
+                            "paymentNo":paymentNo
                         }),
                         success: function (firstData) {
                             if (firstData.code == 0) {
@@ -223,7 +222,7 @@
                                             //回到第一个webview
                                             //是否是商城(配在底部tab)
                                             var index;
-                                            if(/healthcloud-shop-h5/.test(firstData.data.order_item_url)){
+                                            if(/healthcloud-shop-h5/.test(firstData.data.orderItemUrl)){
                                                 index=-9;
                                             }else{
                                                 index=-1;
@@ -256,7 +255,7 @@
                                     $(document).on('click', '#orderDetail', function () {
                                         //是否是商城
                                         var detailParam;
-                                        if(/healthcloud-shop-h5/.test(firstData.data.order_item_url)){
+                                        if(/healthcloud-shop-h5/.test(firstData.data.orderItemUrl)){
                                             detailParam="orderId";
                                         }else{
                                             detailParam="pay_code";
@@ -264,7 +263,7 @@
                                         NativeFunc({
                                             ACTION: "OPENURL",
                                             PARAM: {
-                                                URL: firstData.data.order_item_url+"?"+detailParam+"=" + localStorage.getItem(detailParam)
+                                                URL: firstData.data.orderItemUrl+"?"+detailParam+"=" + localStorage.getItem(detailParam)
                                             }
                                         })
                                     });

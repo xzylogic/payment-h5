@@ -57,7 +57,7 @@
               NativeFunc({
                   ACTION: "OPENURL",
                   PARAM: {
-                      URL: requestUrl +"/orderDetail.html?"+detailParam+"="+localStorage.getItem(detailParam)//页面路径必须保证一样才能用这页
+                      URL: requestUrl +"/orderDetail.html?"+detailParam+"="+localStorage.getItem(detailParam)+"&v="+new Date().getTime()//页面路径必须保证一样才能用这页
                   }
               })
           });

@@ -129,7 +129,7 @@
                                     NativeFunc({
                                         ACTION: "OPENURL",
                                         PARAM: {
-                                            URL: firstData.data.orderItemUrl+"?"+detailParam+"=" + localStorage.getItem(detailParam)
+                                            URL: firstData.data.orderItemUrl+"?"+detailParam+"=" + localStorage.getItem(detailParam)+"&v="+new Date().getTime()
                                         }
                                     })
                                 });

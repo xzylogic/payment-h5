@@ -13,7 +13,7 @@
 <body style="display: none;">
 <div class="container manageContainer">
     <div class="order-pay-wrap">
-        <p class="custom-top-tips">
+        <p class="custom-top-tips" style="display: none;">
             该订单将为您保留60分钟，请尽快完成支付~
         </p>
         <div class="total-box">
@@ -119,7 +119,10 @@
         var lightAppCode=localStorage.getItem('lightAppCode');
         var shopUserId= localStorage.getItem('shopUserId');
         var isNative=localStorage.getItem('isNative');
-
+        //商城显示保留60分钟提示
+        if(/healthcloud-shop-h5/.test(requestUrl)){
+            $(".custom-top-tips").show();
+        }
         //支付相关url前段
         var paymentRequestUrl=localStorage.getItem('paymentRequestUrl');
         //订单id
@@ -189,13 +192,17 @@
         }
         //支付宝
         $(document).on('click', '#alipay', function(){
-            $("#alipay label")[0].addClass("checkRadio");
-            $("#wechat label")[0].removeClass("checkRadio");
+            if(!($($("#alipay label")[0]).hasClass("checkRadio"))){
+                $("#alipay label")[0].addClass("checkRadio");
+                $("#wechat label")[0].removeClass("checkRadio");
+            }
         });
         //微信支付
         $(document).on('click', '#wechat', function(){
-            $("#wechat label")[0].addClass("checkRadio");
-            $("#alipay label")[0].removeClass("checkRadio");
+            if(!($($("#wechat label")[0]).hasClass("checkRadio"))){
+                $("#wechat label")[0].addClass("checkRadio");
+                $("#alipay label")[0].removeClass("checkRadio");
+            }
         });
         //支付
         var checkedWay="";

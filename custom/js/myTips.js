@@ -94,7 +94,16 @@ function showMyloading() {
 function hideMyloading() {
     $("#myloading").css("display","none")
 }
-
+function is_weixn_qq(){
+    var ua = navigator.userAgent.toLowerCase();
+    if(ua.match(/MicroMessenger\/[0-9]/i)){
+        return "weixin";
+    }
+//          else if(ua.match(/QQ\/[0-9]/i)){
+//              return "QQ";
+//          }
+    return false;
+}
 function formatMsg(msg) {
     switch (msg){
         case "ERROR_00001":

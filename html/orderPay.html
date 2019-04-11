@@ -222,54 +222,68 @@
                 showMyTip();
                 return;
             }
-            //调接口创建支付信息
-            showMyloading();
-            $.ajax({
-                url:ajaxUrl.paymentAgent,
-                type:"post",
-//                async:false,
-                contentType: 'application/json',
-                beforeSend: function(request) {
-                    request.setRequestHeader("token",netToken);
-                    request.setRequestHeader("channelCode",channelCode);
-                    request.setRequestHeader("lightAppCode",lightAppCode);
-                    request.setRequestHeader('timestamp', new Date().getTime());
-                },
-                data:JSON.stringify({
-                    "clientIp": returnCitySN.cip,
-                    "paymentNo": paymentNo,
-                    // "biz_id": payBusinessNo,
-                    // "business_no": orderId,
-                    "os": os,
-                    "payType": checkedWay,
-                    "uid":localStorage.getItem('jkyUid')
-                }),
-                success:function(firstData){
-                    if(firstData.code==0){
-                        localStorage.setItem("amount",Number(totalFee).toFixed(2));
-                        if(checkedWay=="alipay"){
-                            document.write(firstData.data);
-                        }else{
-                            localStorage.setItem("payRes",firstData.data)
-                            NativeFunc({
-                                ACTION: "OPENURL",
-                                PARAM: {
-                                    URL: paymentRequestUrl +"/blank.html"
-                                }
-                            })
+            if(is_weixn_qq()&&checkedWay=="alipay"){
+                $(".mytip").html("下单成功,请至健康云app商城订单完成支付");
+                showMyTipLong();
+                setTimeout(function () {
+                    isSubmitting=false;
+                    NativeFunc({
+                        ACTION: "OPENURL",
+                        PARAM: {
+                            URL: "https://www.wdjky.com/neohealthcloud-app-h5/"
                         }
-                        hideMyloading();
-                    }else{
-                        $(".mytip").html(firstData.msg||"创建支付信息接口出错");
+                    })
+                },2500)
+            }else{
+                //调接口创建支付信息
+                showMyloading();
+                $.ajax({
+                    url:ajaxUrl.paymentAgent,
+                    type:"post",
+//                async:false,
+                    contentType: 'application/json',
+                    beforeSend: function(request) {
+                        request.setRequestHeader("token",netToken);
+                        request.setRequestHeader("channelCode",channelCode);
+                        request.setRequestHeader("lightAppCode",lightAppCode);
+                        request.setRequestHeader('timestamp', new Date().getTime());
+                    },
+                    data:JSON.stringify({
+                        "clientIp": returnCitySN.cip,
+                        "paymentNo": paymentNo,
+                        // "biz_id": payBusinessNo,
+                        // "business_no": orderId,
+                        "os": os,
+                        "payType": checkedWay,
+                        "uid":localStorage.getItem('jkyUid')
+                    }),
+                    success:function(firstData){
+                        if(firstData.code==0){
+                            localStorage.setItem("amount",Number(totalFee).toFixed(2));
+                            if(checkedWay=="alipay"){
+                                document.write(firstData.data);
+                            }else{
+                                localStorage.setItem("payRes",firstData.data)
+                                NativeFunc({
+                                    ACTION: "OPENURL",
+                                    PARAM: {
+                                        URL: paymentRequestUrl +"/blank.html"
+                                    }
+                                })
+                            }
+                            hideMyloading();
+                        }else{
+                            $(".mytip").html(firstData.msg||"创建支付信息接口出错");
+                            showMyTip();
+                            hideMyloading();
+                        }
+                    },
+                    error:function(error){
                         showMyTip();
                         hideMyloading();
                     }
-                },
-                error:function(error){
-                    showMyTip();
-                    hideMyloading();
-                }
-            });
+                });
+            }
         })
 
     })

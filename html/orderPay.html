@@ -222,19 +222,19 @@
                 showMyTip();
                 return;
             }
-            if(is_weixn_qq()&&checkedWay=="alipay"){
-                $(".mytip").html("下单成功,请至健康云app商城订单完成支付");
-                showMyTipLong();
-                setTimeout(function () {
-                    isSubmitting=false;
-                    NativeFunc({
-                        ACTION: "OPENURL",
-                        PARAM: {
-                            URL: "https://www.wdjky.com/neohealthcloud-app-h5/"
-                        }
-                    })
-                },2500)
-            }else{
+//            if(is_weixn_qq()&&checkedWay=="alipay"){
+//                $(".mytip").html("下单成功,请至健康云app商城订单完成支付");
+//                showMyTipLong();
+//                setTimeout(function () {
+//                    isSubmitting=false;
+//                    NativeFunc({
+//                        ACTION: "OPENURL",
+//                        PARAM: {
+//                            URL: "https://www.wdjky.com/neohealthcloud-app-h5/"
+//                        }
+//                    })
+//                },2500)
+//            }else{
                 //调接口创建支付信息
                 showMyloading();
                 $.ajax({
@@ -283,7 +283,7 @@
                         hideMyloading();
                     }
                 });
-            }
+//            }
         })
 
     })

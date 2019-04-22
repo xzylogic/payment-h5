@@ -178,9 +178,8 @@
                         if(data.data.paymentChannel.split(",").indexOf("2")>-1){
                             $("#wechat").show();
                         }
-                    }else{
-                        $(".mytip").html(data.msg||"创建支付信息接口出错");
-                        showMyTip();
+                    }else {
+                        requestWrongCode(data.code, data.msg);
                     }
                     hideMyloading();
                 },
@@ -272,9 +271,8 @@
                                 })
                             }
                             hideMyloading();
-                        }else{
-                            $(".mytip").html(firstData.msg||"创建支付信息接口出错");
-                            showMyTip();
+                        }else {
+                            requestWrongCode(firstData.code, firstData.msg);
                             hideMyloading();
                         }
                     },

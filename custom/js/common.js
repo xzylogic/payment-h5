@@ -205,7 +205,7 @@ var custom = {
 /* 公共函数 */
 // 请求码错误回调
 function requestWrongCode(_code, _msg){
-
+	$("body").show();
 	if (_code==11 || _code==12) {
 
 		$.toptip('您的账号已失效，请重新登录', 'error');

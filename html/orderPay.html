@@ -51,10 +51,13 @@
 <script type="text/javascript" src="../lib/js/jquery.min.js"></script>
 <script src="../lib/js/jquery-weui.js"></script>
 <script type="text/javascript" src="../custom/js/native.js"></script>
+
 <script type="text/javascript" src="../custom/js/common.js?v=2019042601"></script>
 <script src="../custom/js/myTips.js?v=2019042601"></script>
-<script src="../custom/js/api.js?v=2019042601"></script>
+<script src="../custom/js/api.js?v=2019043001"></script>
 <script type="text/javascript" src="https://pv.sohu.com/cityjson?ie=utf-8"></script>
+
+<script src="../custom/js/share.js"></script>
 <script>
     $(function () {
         var hasWx=true;
@@ -236,6 +239,22 @@
 //            }else{
                 //调接口创建支付信息
                 showMyloading();
+                var requestObj = {
+                    "clientIp": returnCitySN.cip,
+                    "paymentNo": paymentNo,
+                    // "biz_id": payBusinessNo,
+                    // "business_no": orderId,
+                    "os": os,
+                    // "payType": checkedWay,
+                    "uid":localStorage.getItem('jkyUid')
+                }
+                if(isWeiXin()){
+                    requestObj.payType = 'wechat_jsapi';//微信容器中支付
+                    // requestObj.openId = 'openid';
+                }
+                else{
+                    requestObj.payType = checkedWay;
+                }
                 $.ajax({
                     url:ajaxUrl.paymentAgent,
                     type:"post",
@@ -247,28 +266,27 @@
                         request.setRequestHeader("lightAppCode",lightAppCode);
                         request.setRequestHeader('timestamp', new Date().getTime());
                     },
-                    data:JSON.stringify({
-                        "clientIp": returnCitySN.cip,
-                        "paymentNo": paymentNo,
-                        // "biz_id": payBusinessNo,
-                        // "business_no": orderId,
-                        "os": os,
-                        "payType": checkedWay,
-                        "uid":localStorage.getItem('jkyUid')
-                    }),
+                    data:JSON.stringify(requestObj),
                     success:function(firstData){
                         if(firstData.code==0){
                             localStorage.setItem("amount",Number(totalFee).toFixed(2));
-                            if(checkedWay=="alipay"){
-                                document.write(firstData.data);
-                            }else{
-                                localStorage.setItem("payRes",firstData.data)
-                                NativeFunc({
-                                    ACTION: "OPENURL",
-                                    PARAM: {
-                                        URL: paymentRequestUrl +"/blank.html"
-                                    }
-                                })
+                            
+                            //微信容器支付
+                            if(isWeiXin()){
+                                wxPayment(firstData.data);//微信支付
+                            }
+                            else{
+                                if(checkedWay=="alipay"){
+                                    document.write(firstData.data);
+                                }else{
+                                    localStorage.setItem("payRes",firstData.data)
+                                    NativeFunc({
+                                        ACTION: "OPENURL",
+                                        PARAM: {
+                                            URL: paymentRequestUrl +"/blank.html"
+                                        }
+                                    })
+                                }
                             }
                             hideMyloading();
                         }else {
@@ -285,6 +303,8 @@
         })
 
     })
+
+    
 </script>
 </body>
 </html>

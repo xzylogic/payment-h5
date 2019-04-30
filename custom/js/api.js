@@ -15,6 +15,8 @@ if (document.location.host == 'h5.wdjky.com' || document.location.host == 'www.w
 
 //请求地址
 var ajaxUrl= {
+
+	getWechatJsapiSignature:ajaxRoot + 'getWechatJsapiSignature',
 	// userGetTokenByAuthCode :"http://10.1.64.194/healthcloud-shop-api/api/common/get_uid",
 	userGetTokenByAuthCode : ajaxRoot + "shopUserGetTokenByAuthCode", // 根据code换token
 	indexBanner :ajaxRoot + "shopCommonBanner", // 首页banner

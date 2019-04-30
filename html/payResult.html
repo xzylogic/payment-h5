@@ -37,9 +37,9 @@
     <script type="text/javascript" src="../lib/js/jquery.min.js"></script>
     <script src="../lib/js/jquery-weui.js"></script>
     <script type="text/javascript" src="../custom/js/native.js"></script>
-    <script type="text/javascript" src="../custom/js/common.js"></script>
-    <script src="../custom/js/myTips.js"></script>
-    <script src="../custom/js/api.js"></script>
+    <script type="text/javascript" src="../custom/js/common.js?v=2019042601"></script>
+    <script src="../custom/js/myTips.js?v=2019042601"></script>
+    <script src="../custom/js/api.js?v=2019042601"></script>
     <script>
         $(function () {
             //click事件优化
@@ -147,13 +147,8 @@
                                 });
                             }
                             hideMyloading();
-                        } else if (firstData.code == 12) {
-                            $(".mytip").html("账户在其他设备登录,请重新登录");
-                            showMyTip();
-                            hideMyloading();
-                        } else {
-                            $(".mytip").html(firstData.msg || "查询支付状态失败");
-                            showMyTip();
+                        }else {
+                            requestWrongCode(firstData.code, firstData.msg);
                             hideMyloading();
                         }
                     },

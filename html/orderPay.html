@@ -51,9 +51,10 @@
 <script type="text/javascript" src="../lib/js/jquery.min.js"></script>
 <script src="../lib/js/jquery-weui.js"></script>
 <script type="text/javascript" src="../custom/js/native.js"></script>
-<script type="text/javascript" src="../custom/js/common.js"></script>
-<script src="../custom/js/myTips.js"></script>
-<script src="../custom/js/api.js?v=1.0"></script>
+
+<script type="text/javascript" src="../custom/js/common.js?v=2019042601"></script>
+<script src="../custom/js/myTips.js?v=2019042601"></script>
+<script src="../custom/js/api.js?v=2019043001"></script>
 <script type="text/javascript" src="https://pv.sohu.com/cityjson?ie=utf-8"></script>
 
 <script src="../custom/js/share.js"></script>
@@ -180,9 +181,8 @@
                         if(data.data.paymentChannel.split(",").indexOf("2")>-1){
                             $("#wechat").show();
                         }
-                    }else{
-                        $(".mytip").html(data.msg||"创建支付信息接口出错");
-                        showMyTip();
+                    }else {
+                        requestWrongCode(data.code, data.msg);
                     }
                     hideMyloading();
                 },
@@ -289,9 +289,8 @@
                                 }
                             }
                             hideMyloading();
-                        }else{
-                            $(".mytip").html(firstData.msg||"创建支付信息接口出错");
-                            showMyTip();
+                        }else {
+                            requestWrongCode(firstData.code, firstData.msg);
                             hideMyloading();
                         }
                     },

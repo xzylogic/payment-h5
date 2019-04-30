@@ -39,7 +39,7 @@ Date.prototype.Format = function(fmt) { //author: meizz
 	};
 	if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
 	for (var k in o)
-	if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+		if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
 	return fmt;
 };
 
@@ -47,19 +47,19 @@ Date.prototype.Format = function(fmt) { //author: meizz
 /* 公共类 */
 var custom = {
 	//获取没有数据DOM
-    getNoneDataImg:function(text,top) {
-        if (text == undefined || text.length == 0) text = '没有数据';
-        if(top==undefined || top.length==0)top=50;
-        var imgHtml = '<div class="none-data">\n' +
-            '                <img src="../custom/images/no-data.png" style="margin-top: '+top+'%"/>\n' +
-            '                <p>' + text + '</p>\n' +
-            '            </div>';
-        return imgHtml;
-    },
-	
+	getNoneDataImg:function(text,top) {
+		if (text == undefined || text.length == 0) text = '没有数据';
+		if(top==undefined || top.length==0)top=50;
+		var imgHtml = '<div class="none-data">\n' +
+			'                <img src="../custom/images/no-data.png" style="margin-top: '+top+'%"/>\n' +
+			'                <p>' + text + '</p>\n' +
+			'            </div>';
+		return imgHtml;
+	},
+
 	// 日期格式化
 	getFormatDate: function(timestamp) {
-		
+
 		var dateObj = new Date(timestamp);
 		var y = dateObj.getFullYear();
 		var m = dateObj.getMonth() + 1;
@@ -72,7 +72,7 @@ var custom = {
 
 		return currentdate;
 	},
-	
+
 	// 个位加0显示
 	formatNum: function(num) {
 		num = num < 10 ? '0' + num : num;
@@ -118,130 +118,166 @@ var custom = {
 		}
 
 		return birthday;
+	},
+
+	/*
+	 * 行为日志 埋点请求
+	 * 可参考 health-vaccine 项目 任意html都有
+	 * 初版参数：beAnalysis: function(_event, _page, _module, _uid, _additionalObj, _beforeSendObj)
+	 * 初版示例：custom.beAnalysis('click', 'page_zzjd_dzxx', 'button_syb', uid, false, {token : token, channelCode : channelCode, lightAppCode : lightAppCode, timestamp : new Date().getTime()});
+	 * 其中以下两个参数可删除 :
+	 * _beforeSendObj	请求beforeSend参数
+	 * _uid				健康云用户id
+	 *
+	 * 简化后参数：beAnalysis: (_event, _page, _module, _additionalObj)
+	 * 简化后示例：custom.beAnalysis('click', 'page_zzjd_dzxx', 'button_syb', {});
+	 *
+	 */
+	beAnalysis: function(_event, _page, _module, _additionalObj) {
+
+		try {
+			var date = new Date();
+			var timeFormat = date.Format("yyyy-MM-dd hh:mm:ss");
+			var timeStamp = date.getTime();
+			var param = {
+				action: {
+					event: _event,
+					page: _page,
+					module: _module,
+					actionTime: timeFormat,
+					uid: localStorage.getItem('jkyUid') || '',
+					additional: {
+						platform: 'jky',
+						id: ""
+					}
+				}
+			}
+			if (_additionalObj) {
+				for (key in _additionalObj) {
+					param.action.additional[key] = _additionalObj[key]
+				}
+			}
+			// headerAnalysis 此参数为请求头部信息 主要用于微信端
+			// 原生端调用时 有isNew或isToken参数会自动添加下面的设置并将我们的设置覆盖
+			var headerAnalysis = {
+				"platform": "2", // h5 = 2
+				"model": "", //
+				"os-version": "", // 操作系统
+				"main-area": "", // 市级
+				"device": "", // 设备型号
+				"spec-area": "", // 区级行政区
+				"screen-height": "", //
+				"channel": "10006", // 渠道
+				"screen-width": "", //
+				"app-version": "", // app
+				"version": "" ,// 1.0.0
+			};
+			$.ajax({
+				url: ajaxUrl.logAction + '?isNew=1&isToken=1', // isNew IOS用 isToken Android用
+				type: "POST",
+				headers: headerAnalysis,
+				beforeSend: function(request) {
+					request.setRequestHeader('token', localStorage.getItem('netToken') || getParams('netToken'));
+					request.setRequestHeader("channelCode", localStorage.getItem('channelCode') || getParams('channelCode'));
+					request.setRequestHeader("lightAppCode", localStorage.getItem('lightAppCode') || getParams('lightAppCode'));
+					request.setRequestHeader('timestamp', timeStamp);
+				},
+				contentType: "application/json; charset=utf-8",
+				data: JSON.stringify(param),
+				dataType: "json",
+				success: function(data) {
+					console.log(data);
+					//alert(JSON.stringify(data))
+				},
+				error: function(err) {
+					console.log(err);
+					//alert(JSON.stringify(err))
+					if (err.status == 404) alert('404 : ' + JSON.stringify(err)); //404时给提示
+				}
+			})
+		} catch (e) {
+			console.log(e);
+		}
 	}
-	
-// 	// 示例
-// 	custom.beAnalysis('click', 'page_zzjd_dzxx', 'button_syb', uid, false, {token : token, channelCode : channelCode, lightAppCode : lightAppCode, timestamp : new Date().getTime()});
-// 	// 行为日志 埋点请求
-// 	// _beforeSendObj Petu添加
-// 	beAnalysis: function(_event, _page, _module, _uid, _additionalObj, _beforeSendObj) {
-// 		
-// 		try {
-// 			var time = new Date().Format("yyyy-MM-dd hh:mm:ss");
-// 			var param = {
-// 				action: {
-// 					event: _event,
-// 					page: _page,
-// 					module: _module,
-// 					actionTime: time,
-// 					uid: _uid,
-// 					additional: {
-// 						platform: 'jky',
-// 						id: ""
-// 					}
-// 				}
-// 			}
-// 			if (_additionalObj) {
-// 				for (key in _additionalObj) {
-// 					param.action.additional[key] = _additionalObj[key]
-// 				}
-// 			}
-// 			
-// 			var headerAnalysis = {
-// 					"platform": "2", // h5 = 2
-// 					"model": "", // ???
-// 					"os-version": "", // 操作系统
-// 					"main-area": "", // 市级
-// 					"device": "", // 设备型号
-// 					"spec-area": "", // 区级行政区
-// 					"screen-height": "", // 
-// 					"channel": "10006", // 品牌渠道
-// 					"screen-width": "", // 
-// 					"app-version": "", // app
-// 					"version": "" // 1.0.0
-// 			};
-// 			// 此处的 本地存取等操作 是用于app中 主要从原生获取 现微信直接写 参数尽量写
-// 			// localStorage.setItem('headerAnalysis', JSON.stringify(headerAnalysis));
-// 			// var headerAnalysis = localStorage.getItem('headerAnalysis')
-// 			// if (headerAnalysis && headerAnalysis.length > 0) {
-// 				// headerAnalysis = JSON.parse(header);
-// 				headerAnalysis.timestamp = _beforeSendObj.timestamp; //添加时间戳
-// 
-// 				$.ajax({
-// 					url: ajaxUrl.logAction,
-// 					type: "POST",
-// 					headers: headerAnalysis,
-// 					beforeSend: function(request) {
-// 						request.setRequestHeader('token', _beforeSendObj.token);
-// 						request.setRequestHeader("channelCode", _beforeSendObj.channelCode);
-// 						request.setRequestHeader("lightAppCode", _beforeSendObj.lightAppCode);
-// 						request.setRequestHeader('timestamp', _beforeSendObj.timestamp);
-// 					},
-// 					contentType: "application/json; charset=utf-8",
-// 					data: JSON.stringify(param),
-// 					dataType: "json",
-// 					success: function(data) {
-// 						console.log(data);
-// 						//alert(JSON.stringify(data))
-// 					},
-// 					error: function(err) {
-// 						console.log(err);
-// 						//alert(JSON.stringify(err))
-// 						if (err.status == 404) alert('404 : ' + JSON.stringify(err)); //404时给提示
-// 					}
-// 				})
-// 			// }
-// 		} catch (e) {
-// 			console.log(e);
-// 		}
-// 	}
-	
+
 };
 
 /* 公共函数 */
+// 请求码错误回调
+function requestWrongCode(_code, _msg){
+	$("body").show();
+	if (_code==11 || _code==12) {
+
+		$.toptip('您的账号已失效，请重新登录', 'error');
+		// 轻应用退出当前页面
+		setTimeout(function() {
+			NativeFunc({
+				ACTION : "CLOSEPAGE",
+				PARAM : {
+					INDEX : -9
+				}
+			});
+		}, 2000);
+
+	} else if (_code == 13) {
+
+		$.toptip('账户在其他设备登录,请重新登录', 'error');
+		// APP返回到登录页面
+		setTimeout(function() {
+			NativeFunc({
+				ACTION: "LOGOUT"
+			});
+		}, 2000);
+
+	} else {
+		// 直接提示错误
+		$.toptip(_msg, 'error');
+	}
+}
+
 // 初始化地址选择
 function addressIOSelectInit(selectDom, showDom) {
-	
-    selectDom.addEventListener('click', function () {
-        var iosSelect = new IosSelect(3, 
-            [iosProvinces, iosCitys, iosCountys],
-            {
-                title: '地址选择',
-                itemHeight: 40,
-                relation: [1, 1],
-                oneLevelId: showDom.dataset['province'],
-                twoLevelId: showDom.dataset['city'],
-                threeLevelId: showDom.dataset['district'],
-                callback: function (selectOneObj, selectTwoObj, selectThreeObj) {
-					
+
+	selectDom.addEventListener('click', function () {
+		var iosSelect = new IosSelect(3,
+			[iosProvinces, iosCitys, iosCountys],
+			{
+				title: '地址选择',
+				itemHeight: 40,
+				relation: [1, 1],
+				oneLevelId: showDom.dataset['province'],
+				twoLevelId: showDom.dataset['city'],
+				threeLevelId: showDom.dataset['district'],
+				callback: function (selectOneObj, selectTwoObj, selectThreeObj) {
+
 					showDom.dataset['province'] = selectOneObj.id;
 					showDom.dataset['city'] = selectTwoObj.id;
 					showDom.dataset['district'] = selectThreeObj.id;
-					
-                    showDom.innerText = (selectOneObj.value + ' ' + selectTwoObj.value + ' ' + selectThreeObj.value);
-                }
-        });
-    });
+
+					showDom.innerText = (selectOneObj.value + ' ' + selectTwoObj.value + ' ' + selectThreeObj.value);
+				}
+			});
+	});
 };
 
 // 初始化日期选择 yLimit年数限制
 function dateIOSelectInit(yLimit) {
-	
+
 	var selectDateDom = document.querySelector('#selectDate');
-    var showDateDom = document.querySelector('#showDate');
+	var showDateDom = document.querySelector('#showDate');
 	var showDate = showDateDom.innerText;
-    // 当前时间
-    var now = new Date();
+	// 当前时间
+	var now = new Date();
 	var nowYear = now.getFullYear();
 	var nowMonth = now.getMonth() + 1;
 	var nowDay = now.getDate();
 	// 默认当天
-    showDateDom.dataset['year'] = nowYear;
-    showDateDom.dataset['month'] = nowMonth;
-    showDateDom.dataset['date'] = nowDay;
+	showDateDom.dataset['year'] = nowYear;
+	showDateDom.dataset['month'] = nowMonth;
+	showDateDom.dataset['date'] = nowDay;
 	// 是否有初始日期
 	if (showDate.length == 10) {
-		
+
 		var dateArr = showDate.split('-');
 		showDateDom.dataset['year'] = dateArr[0] * 1;
 		showDateDom.dataset['month'] = dateArr[1] * 1;
@@ -252,10 +288,10 @@ function dateIOSelectInit(yLimit) {
 		num = num < 10 ? '0' + num : num;
 		return num;
 	};
-    // 数据初始化
-    function formatYear(nowYear) {
-        var arr = [];
-		
+	// 数据初始化
+	function formatYear(nowYear) {
+		var arr = [];
+
 		if (yLimit == 18) {
 			// 选择儿童出生日期 即小于18岁
 			for (var i = nowYear - 18; i <= nowYear; i++) {
@@ -265,7 +301,7 @@ function dateIOSelectInit(yLimit) {
 				});
 			}
 		};
-		
+
 		if (yLimit == 2) {
 			// 设置接种日期 未来两年 加3
 			for (var i = nowYear; i < nowYear + 3; i++) {
@@ -275,40 +311,40 @@ function dateIOSelectInit(yLimit) {
 				});
 			}
 		};
-		
-        return arr;
-    };
-    function formatMonth(m, isAfter) {
-        var arr = [];
+
+		return arr;
+	};
+	function formatMonth(m, isAfter) {
+		var arr = [];
 		var n = isAfter ? m : 1;
 		var len = isAfter ? 12 : m;
-        for (var i = n; i <= len; i++) {
-            arr.push({
-                id: i + '',
-                value: i + '月'
-            });
-        }
-        return arr;
-    };
-    function formatDate(d, cd, isAfter) {
-        var arr = [];
+		for (var i = n; i <= len; i++) {
+			arr.push({
+				id: i + '',
+				value: i + '月'
+			});
+		}
+		return arr;
+	};
+	function formatDate(d, cd, isAfter) {
+		var arr = [];
 		var n = isAfter ? d : 1;
 		var len = isAfter ? cd : d;
-        for (var i = n; i <= len; i++) {
-            arr.push({
-                id: i + '',
-                value: i + '日'
-            });
-        }
-        return arr;
-    }
-    var yearData = function(callback) {
+		for (var i = n; i <= len; i++) {
+			arr.push({
+				id: i + '',
+				value: i + '日'
+			});
+		}
+		return arr;
+	}
+	var yearData = function(callback) {
 		callback(formatYear(nowYear))
-    }
-    var monthData = function(year, callback) {
+	}
+	var monthData = function(year, callback) {
 		var m = 1; // 默认为 一月
 		var isAfter = true; // 默认为 传入月份之后
-		
+
 		if (yLimit == 18) {
 			if (year == (nowYear - 18)) {
 				m = nowMonth;
@@ -318,7 +354,7 @@ function dateIOSelectInit(yLimit) {
 				isAfter = false;
 			};
 		};
-		
+
 		if (yLimit == 2) {
 			if (year == (nowYear + 2)) {
 				m = nowMonth;
@@ -328,14 +364,14 @@ function dateIOSelectInit(yLimit) {
 				m = nowMonth;
 			};
 		};
-		
+
 		callback(formatMonth(m, isAfter));
-    };
-    var dateData = function(year, month, callback) {
+	};
+	var dateData = function(year, month, callback) {
 		var d = 28; // 默认为 平年二月天数
 		var cd = 28; // month实际天数
 		var isAfter = false; // 默认为 传入日期之前
-		
+
 		if (/^(1|3|5|7|8|10|12)$/.test(month)) {
 			d = 31;
 			cd = 31;
@@ -348,7 +384,7 @@ function dateIOSelectInit(yLimit) {
 				cd = 29;
 			};
 		};
-		
+
 		if (yLimit == 18 && month == nowMonth) {
 			if (year == (nowYear - 18)) {
 				d = nowDay;
@@ -358,7 +394,7 @@ function dateIOSelectInit(yLimit) {
 				d = nowDay;
 			};
 		};
-		
+
 		if (yLimit == 2 && month == nowMonth) {
 			if (year == (nowYear + 2)) {
 				d = nowDay;
@@ -368,29 +404,29 @@ function dateIOSelectInit(yLimit) {
 				isAfter = true;
 			};
 		};
-		
+
 		callback(formatDate(d, cd, isAfter));
-    };
-    selectDateDom.addEventListener('click', function () {
-        var iosSelect = new IosSelect(3, 
-            [yearData, monthData, dateData],
-            {
-                title: '请选择日期',
-                itemHeight: 40,
-                oneLevelId: showDateDom.dataset['year'],
-                twoLevelId: showDateDom.dataset['month'],
-                threeLevelId: showDateDom.dataset['date'],
-                // showLoading: true,
-                callback: function (selectOneObj, selectTwoObj, selectThreeObj) {
-					
+	};
+	selectDateDom.addEventListener('click', function () {
+		var iosSelect = new IosSelect(3,
+			[yearData, monthData, dateData],
+			{
+				title: '请选择日期',
+				itemHeight: 40,
+				oneLevelId: showDateDom.dataset['year'],
+				twoLevelId: showDateDom.dataset['month'],
+				threeLevelId: showDateDom.dataset['date'],
+				// showLoading: true,
+				callback: function (selectOneObj, selectTwoObj, selectThreeObj) {
+
 					showDateDom.dataset['year'] = selectOneObj.id;
 					showDateDom.dataset['month'] = selectTwoObj.id;
 					showDateDom.dataset['date'] = selectThreeObj.id;
 					showDateDom.innerText = selectOneObj.id + '-' + formatNum(selectTwoObj.id) + '-' + formatNum(selectThreeObj.id);
 					showDateDom.style.color = 'rgb(51, 51, 51)';
-                }
-        });
-    });
+				}
+			});
+	});
 };
 
 // 初始化加载
@@ -467,24 +503,24 @@ var cssObj6 = {
 
 /* weui 精简 */
 $.fn.transitionEnd = function(callback) {
-    var events = ['webkitTransitionEnd', 'transitionend', 'oTransitionEnd', 'MSTransitionEnd', 'msTransitionEnd'],
-    i,
-    dom = this;
+	var events = ['webkitTransitionEnd', 'transitionend', 'oTransitionEnd', 'MSTransitionEnd', 'msTransitionEnd'],
+		i,
+		dom = this;
 
-    function fireCallBack(e) {
-        /*jshint validthis:true */
-        if (e.target !== this) return;
-        callback.call(this, e);
-        for (i = 0; i < events.length; i++) {
-            dom.off(events[i], fireCallBack);
-        }
-    }
-    if (callback) {
-        for (i = 0; i < events.length; i++) {
-            dom.on(events[i], fireCallBack);
-        }
-    }
-    return this;
+	function fireCallBack(e) {
+		/*jshint validthis:true */
+		if (e.target !== this) return;
+		callback.call(this, e);
+		for (i = 0; i < events.length; i++) {
+			dom.off(events[i], fireCallBack);
+		}
+	}
+	if (callback) {
+		for (i = 0; i < events.length; i++) {
+			dom.on(events[i], fireCallBack);
+		}
+	}
+	return this;
 };
 
 /* weui 弹框 */
@@ -492,7 +528,7 @@ var defaults;
 
 $.modal = function(params, onOpen) {
 	params = $.extend({},
-	defaults, params);
+		defaults, params);
 
 	var buttons = params.buttons;
 
@@ -584,7 +620,7 @@ $.alert = function(text, title, onOK) {
 // 			onOK = arguments[1];
 // 			title = undefined;
 // 		}
-// 
+//
 // 		config = {
 // 			text: text,
 // 			title: title,
@@ -609,15 +645,15 @@ $.alert = function(text, title, onOK) {
 // };
 
 defaults = $.modal.prototype.defaults = {
-    title: "提示",
-    text: undefined,
-    buttonOK: "确定",
-    buttonCancel: "取消",
-    buttons: [{
-        text: "确定",
-        className: "primary"
-    }],
-    autoClose: true //点击按钮自动关闭对话框，如果你不希望点击按钮就关闭对话框，可以把这个设置为false
+	title: "提示",
+	text: undefined,
+	buttonOK: "确定",
+	buttonCancel: "取消",
+	buttons: [{
+		text: "确定",
+		className: "primary"
+	}],
+	autoClose: true //点击按钮自动关闭对话框，如果你不希望点击按钮就关闭对话框，可以把这个设置为false
 };
 
 /* weui toast */
@@ -644,67 +680,67 @@ $.toptip = function(text, duration, type) {
 	}
 
 	timeout = setTimeout(function() {
-		$t.removeClass('weui-toptips_visible').transitionEnd(function() {
-			$t.remove();
-		});
-	},
-	duration);
+			$t.removeClass('weui-toptips_visible').transitionEnd(function() {
+				$t.remove();
+			});
+		},
+		duration);
 };
 
 /* weui Toast  */
 var show = function(html, className) {
-    className = className || "";
-    var mask = $("<div class='weui-mask_transparent'></div>").appendTo(document.body);
+	className = className || "";
+	var mask = $("<div class='weui-mask_transparent'></div>").appendTo(document.body);
 
-    var tpl = '<div class="weui-toast ' + className + '">' + html + '</div>';
-    var dialog = $(tpl).appendTo(document.body);
+	var tpl = '<div class="weui-toast ' + className + '">' + html + '</div>';
+	var dialog = $(tpl).appendTo(document.body);
 
-    dialog.addClass("weui-toast--visible");
-    dialog.show();
+	dialog.addClass("weui-toast--visible");
+	dialog.show();
 };
 
 var hide = function(callback) {
-    $(".weui-mask_transparent").remove();
-    var done = false;
-    var $el = $(".weui-toast--visible").removeClass("weui-toast--visible").transitionEnd(function() {
-        var $this = $(this);
-        $this.remove();
-        callback && callback();
-        done = true
-    });
+	$(".weui-mask_transparent").remove();
+	var done = false;
+	var $el = $(".weui-toast--visible").removeClass("weui-toast--visible").transitionEnd(function() {
+		var $this = $(this);
+		$this.remove();
+		callback && callback();
+		done = true
+	});
 
-    setTimeout(function() {
-        if (!done) {
-            $el.remove();
-			callback && callback();
-        }
-    },
-    1000)
+	setTimeout(function() {
+			if (!done) {
+				$el.remove();
+				callback && callback();
+			}
+		},
+		1000)
 }
 
 $.toast = function(text, style, callback) {
-    if (typeof style === "function") {
-        callback = style;
-    }
-    var className, iconClassName = 'weui-icon-success-no-circle';
-    var duration = toastDefaults.duration;
-    if (style == "cancel") {
-        className = "weui-toast_cancel";
-        iconClassName = 'weui-icon-cancel'
-    } else if (style == "forbidden") {
-        className = "weui-toast--forbidden";
-        iconClassName = 'weui-icon-warn'
-    } else if (style == "text") {
-        className = "weui-toast--text";
-    } else if (typeof style === typeof 1) {
-        duration = style
-    }
-    show('<i class="' + iconClassName + ' weui-icon_toast"></i><p class="weui-toast_content">' + (text || "已经完成") + '</p>', className);
+	if (typeof style === "function") {
+		callback = style;
+	}
+	var className, iconClassName = 'weui-icon-success-no-circle';
+	var duration = toastDefaults.duration;
+	if (style == "cancel") {
+		className = "weui-toast_cancel";
+		iconClassName = 'weui-icon-cancel'
+	} else if (style == "forbidden") {
+		className = "weui-toast--forbidden";
+		iconClassName = 'weui-icon-warn'
+	} else if (style == "text") {
+		className = "weui-toast--text";
+	} else if (typeof style === typeof 1) {
+		duration = style
+	}
+	show('<i class="' + iconClassName + ' weui-icon_toast"></i><p class="weui-toast_content">' + (text || "已经完成") + '</p>', className);
 
-    setTimeout(function() {
-        hide(callback);
-    },
-    duration);
+	setTimeout(function() {
+			hide(callback);
+		},
+		duration);
 }
 
 // $.showLoading = function(text) {
@@ -714,26 +750,26 @@ $.toast = function(text, style, callback) {
 //     html += '<p class="weui-toast_content">' + (text || "数据加载中") + '</p>';
 //     show(html, 'weui_loading_toast');
 // }
-// 
+//
 // $.hideLoading = function() {
 //     hide();
 // }
 
 var toastDefaults = $.toast.prototype.defaults = {
-    duration: 2500
+	duration: 2500
 }
 
 Element.prototype.removeClass = function (name) {
-    var classs = this.className.split(" ");
-    var index = classs.indexOf(name);
-    var currentClass = "";
-    if (index < 0) return;
-    classs[index] = "";
-    classs.map(function (item) { currentClass = currentClass + item + " " });
-    this.className = currentClass;
+	var classs = this.className.split(" ");
+	var index = classs.indexOf(name);
+	var currentClass = "";
+	if (index < 0) return;
+	classs[index] = "";
+	classs.map(function (item) { currentClass = currentClass + item + " " });
+	this.className = currentClass;
 }
 Element.prototype.addClass = function (name) {
-    this.className = this.className + " " + name;
+	this.className = this.className + " " + name;
 }
 //百度坐标转高德（传入经度、纬度）
 function bd_decrypt(bd_lng, bd_lat) {

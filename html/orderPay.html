@@ -176,7 +176,9 @@
                     if(data.code==0){
                         $("body").show();
                         if(data.data.paymentChannel.split(",").indexOf("1")>-1){
-                            $("#alipay").show();
+                            //微信容器打开，不显示支付宝支付
+                            if(isWeiXin()){ }
+                            else $("#alipay").show();
                         }
                         if(data.data.paymentChannel.split(",").indexOf("2")>-1){
                             $("#wechat").show();
@@ -250,7 +252,7 @@
                 }
                 if(isWeiXin()){
                     requestObj.payType = 'wechat_jsapi';//微信容器中支付
-                    // requestObj.openId = 'openid';
+                    requestObj.openId = localStorage.getItem('wechat_openId');
                 }
                 else{
                     requestObj.payType = checkedWay;

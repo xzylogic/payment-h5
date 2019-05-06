@@ -47,8 +47,14 @@
                                     signType: 'MD5', // 签名方式，默认为'SHA1'，使用新版支付需传入'MD5'
                                     paySign: obj.paysign, // 支付签名
                                     success: function (res) {
-                                        console.log(res);
-                                    // 支付成功后的回调函数
+                                        // 支付成功后的回调函数
+                                        NativeFunc({
+                                            ACTION: "OPENURL",
+                                            PARAM: {
+                                                URL: localStorage.getItem('paymentRequestUrl') +"/payResultWx.html"
+                                            }
+                                        })
+                                        //console.log(res);
                                     },
                                     fail:function (res) {
                                         console.log(res);

@@ -48,14 +48,12 @@
                                     paySign: obj.paysign, // 支付签名
                                     success: function (res) {
                                         // 支付成功后的回调函数
-                                        alert(JSON.stringify(res));
-
-                                        // NativeFunc({
-                                        //     ACTION: "OPENURL",
-                                        //     PARAM: {
-                                        //         URL: localStorage.getItem('paymentRequestUrl') +"/payResultWx.html"
-                                        //     }
-                                        // })
+                                        NativeFunc({
+                                            ACTION: "OPENURL",
+                                            PARAM: {
+                                                URL: localStorage.getItem('paymentRequestUrl') +"/payResultWx.html?payment_no="+localStorage.getItem("paymentNo")
+                                            }
+                                        })
                                         //console.log(res);
                                     },
                                     fail:function (res) {

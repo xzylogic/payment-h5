@@ -273,6 +273,13 @@
                     data:JSON.stringify(requestObj),
                     success:function(firstData){
                         if(firstData.code==0){
+                            if(/healthcloud-shop-h5/.test(requestUrl)) {
+                                //埋点
+                                custom.beAnalysis('click', 'page_zfdd', 'button_zf', {
+                                    'phone': localStorage.getItem('phone')
+                                });
+                            }
+
                             localStorage.setItem("amount",Number(totalFee).toFixed(2));
                             
                             //微信容器支付

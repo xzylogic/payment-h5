@@ -125,6 +125,8 @@
         //商城显示保留60分钟提示
         if(/healthcloud-shop-h5/.test(requestUrl)){
             $(".custom-top-tips").show();
+            //商城埋点
+            custom.beAnalysis('page', 'page_zfdd', '', {'phone' : localStorage.getItem('phone')});
         }
         //支付相关url前段
         var paymentRequestUrl=localStorage.getItem('paymentRequestUrl');
@@ -275,12 +277,30 @@
                             
                             //微信容器支付
                             if(isWeiXin()){
-                                wxPayment(firstData.data);//微信支付
+                                if(/healthcloud-shop-h5/.test(requestUrl)) {
+                                    //埋点
+                                    custom.beAnalysis('click', 'page_zfdd', 'button_wxzf', {
+                                        'phone': localStorage.getItem('phone')
+                                    });
+                                }
+                                    wxPayment(firstData.data);//微信支付
                             }
                             else{
                                 if(checkedWay=="alipay"){
+                                    if(/healthcloud-shop-h5/.test(requestUrl)) {
+                                        //埋点
+                                        custom.beAnalysis('click', 'page_zfdd', 'button_zfbzf', {
+                                            'phone': localStorage.getItem('phone')
+                                        });
+                                    }
                                     document.write(firstData.data);
                                 }else{
+                                    if(/healthcloud-shop-h5/.test(requestUrl)) {
+                                        //埋点
+                                        custom.beAnalysis('click', 'page_zfdd', 'button_wxzf', {
+                                            'phone': localStorage.getItem('phone')
+                                        });
+                                    }
                                     localStorage.setItem("payRes",firstData.data)
                                     NativeFunc({
                                         ACTION: "OPENURL",

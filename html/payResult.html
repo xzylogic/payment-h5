@@ -126,12 +126,17 @@
                                     }else{
                                         detailParam="pay_code";
                                     }
-                                    NativeFunc({
-                                        ACTION: "OPENURL",
-                                        PARAM: {
-                                            URL: firstData.data.orderItemUrl+"?"+detailParam+"=" + localStorage.getItem(detailParam)+"&v="+new Date().getTime()
-                                        }
-                                    })
+									// 延迟跳转订单页面 防止由于网络延时导致后台未更新订单状态
+									showMyloading();
+									setTimeout(function() {
+										hideMyloading();
+										NativeFunc({
+										    ACTION: "OPENURL",
+										    PARAM: {
+										        URL: firstData.data.orderItemUrl+"?"+detailParam+"=" + localStorage.getItem(detailParam)+"&v="+new Date().getTime()
+										    }
+										})
+									}, 2500)
                                 });
                             } else{
                                 $("#fail").show();

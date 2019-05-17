@@ -54,12 +54,18 @@
               }else{
                   detailParam="pay_code";
               }
-              NativeFunc({
-                  ACTION: "OPENURL",
-                  PARAM: {
-                      URL: requestUrl +"/orderDetail.html?"+detailParam+"="+localStorage.getItem(detailParam)+"&v="+new Date().getTime()//页面路径必须保证一样才能用这页
-                  }
-              })
+			  // 延迟跳转订单页面 防止由于网络延时导致后台未更新订单状态
+			  showMyloading();
+			  setTimeout(function() {
+				  hideMyloading();
+				  NativeFunc({
+				      ACTION: "OPENURL",
+				      PARAM: {
+				          URL: requestUrl +"/orderDetail.html?"+detailParam+"="+localStorage.getItem(detailParam)+"&v="+new Date().getTime()//页面路径必须保证一样才能用这页
+				      }
+				  })
+			  }, 2500)
+              
           });
 
           //跳首页

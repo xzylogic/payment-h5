@@ -11,6 +11,9 @@ function getParams (key) {
     }
     return paramsObj;
 };
+var jsLoadStartTime = Date.now();//js加载时间
+var androidTimeout = true;//安卓需要延迟
+
 
 // 原生对象
 var nativeObj= {
@@ -49,14 +52,37 @@ var nativeObj= {
             }
             //Android Frame，注册函数
             if (nativeObj.frameType == "1") {
-                AndroidBridge(function(bridge) {
+                var rgsFun = function(bridge) {
                     bridge.registerHandler("WebBridge", function(paramJSON, responseCallback) {
                         if (paramJSON.length > 0) {
                             var paramObj = JSON.parse(paramJSON);
                             callbackFun(paramObj);
                         }
                     });
-                });
+                }
+
+                /*
+                   兼容安卓WebView刚开页面立马调用原生接口失效bug，
+                   此处判断在安卓WebView中，调用原生接口时页面是否已打开超过200ms；
+                   (不同机型时间有所不同，高配手机时间越短。本次定义中间值200ms)
+               */
+                if(androidTimeout) {
+                    var jsloadTime = Date.now() - jsLoadStartTime;//js已加载时间，单位ms
+                    jsloadTime = 200 - jsloadTime;
+
+                    //js load到现在未超过200ms
+                    if (jsloadTime > 0) {
+                        setTimeout(function () {
+                            AndroidBridge(rgsFun);
+                        }, jsloadTime)
+                    }
+                    else{
+                        AndroidBridge(rgsFun);
+                        androidTimeout = false;//超过200ms 修改状态，下次直接调用安卓接口
+                    }
+                }
+                else
+                    AndroidBridge(rgsFun);
             }
         }
     }
@@ -77,7 +103,30 @@ function NativeFunc(paramObj,callback) {
         }
         //Android Frame
         else if(nativeObj.frameType=="1"){
-            AndroidNativeFunc(JsonStr, callback);//Android
+            /*
+                兼容安卓WebView刚开页面立马调用原生接口失效bug，
+                此处判断在安卓WebView中，调用原生接口时页面是否已打开超过200ms；
+                (不同机型时间有所不同，高配手机时间越短。本次定义中间值200ms)
+            */
+            // if(false){
+            if(androidTimeout) {
+                var jsloadTime = Date.now() - jsLoadStartTime;//js已加载时间，单位ms
+                jsloadTime = 200 - jsloadTime;
+
+                //js load到现在未超过200ms
+                if (jsloadTime > 0) {
+                    setTimeout(function () {
+                        // alert(JSON.stringify(JsonStr));
+                        AndroidNativeFunc(JsonStr, callback);//Android
+                    }, jsloadTime)
+                }
+                else{
+                    AndroidNativeFunc(JsonStr, callback);//Android
+                    androidTimeout = false;//超过200ms 修改状态，下次直接调用安卓接口
+                }
+            }
+            else
+                AndroidNativeFunc(JsonStr, callback);//Android
         }else{
             //原生不支持接口时，原始方法打开窗体
             if(paramObj.ACTION=="OPENURL") location.href = paramObj.PARAM.URL;//默认Web模式打开

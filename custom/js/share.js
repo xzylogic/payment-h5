@@ -16,62 +16,55 @@
                 var shareLinkHost=location.href.split('#')[0].substring(0,location.href.split('#')[0].indexOf("healthcloud-shop-h5")+20);
 
                 var fullUrl = location.href.split('#')[0];//截取url
-                $.ajax({
-                    url: ajaxUrl.getWechatJsapiSignature,
-                    type: "GET",
+                custom.ajaxRequest({
+                    url:ajaxUrl.getWechatJsapiSignature,
                     cache: false,
                     data:{ url:fullUrl },
-                    beforeSend: function(request) {
-                        request.setRequestHeader("token",getParams("token")||localStorage.getItem("netToken"));
-                        request.setRequestHeader("channelCode",getParams("channelCode")||localStorage.getItem("channelCode"));
-                        request.setRequestHeader("lightAppCode","10118");
-                        request.setRequestHeader('timestamp', new Date().getTime());
-                    },
-                    success: function (data) {
-                        if (data.code == 0) {
-                            var signObj=data.data;
-                            //初始化接口
-                            wx.config({
-                                // debug: true, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
-                                appId: signObj.appid, // 必填，公众号的唯一标识
-                                timestamp: signObj.timestamp, // 必填，生成签名的时间戳
-                                nonceStr: '' + signObj.noncestr + '', // 必填，生成签名的随机串
-                                signature: '' + signObj.signature + '',// 必填，签名
-                                jsApiList: ['chooseWXPay'] // 必填，需要使用的JS接口列表
-                            });
-                            wx.ready(function () {
-                                wx.chooseWXPay({
-                                    timestamp: obj.timestamp, // 支付签名时间戳，注意微信jssdk中的所有使用timestamp字段均为小写。但最新版的支付后台生成签名使用的timeStamp字段名需大写其中的S字符
-                                    nonceStr: obj.nonce_str, // 支付签名随机串，不长于 32 位
-                                    package: "prepay_id="+obj.prepay_id+"", // 统一支付接口返回的prepay_id参数值，提交格式如：prepay_id=\*\*\*）
-                                    signType: 'MD5', // 签名方式，默认为'SHA1'，使用新版支付需传入'MD5'
-                                    paySign: obj.paysign, // 支付签名
-                                    success: function (res) {
-                                        // 支付成功后的回调函数
-                                        NativeFunc({
-                                            ACTION: "OPENURL",
-                                            PARAM: {
-                                                URL: localStorage.getItem('paymentRequestUrl') +"/payResultWx.html?payment_no="+localStorage.getItem("paymentNo")
-                                            }
-                                        })
-                                        //console.log(res);
-                                    },
-                                    fail:function (res) {
-                                        console.log(res);
-                                    }
-                                })
-                                console.log('ready');
-                            });
-                            wx.error(function (res) {
-                                console.log(res);
-                            });
-
-                        }else{
-                            //$.toptip(data.msg, 'error');//接口报错
-                        }
-                    },
                     error: function (error) {
                         // console.log(error);
+                        // alert('error');
+                    }
+                },function (data) {
+                    if (data.code == 0) {
+                        var signObj=data.data;
+                        //初始化接口
+                        wx.config({
+                            // debug: true, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+                            appId: signObj.appid, // 必填，公众号的唯一标识
+                            timestamp: signObj.timestamp, // 必填，生成签名的时间戳
+                            nonceStr: '' + signObj.noncestr + '', // 必填，生成签名的随机串
+                            signature: '' + signObj.signature + '',// 必填，签名
+                            jsApiList: ['chooseWXPay'] // 必填，需要使用的JS接口列表
+                        });
+                        wx.ready(function () {
+                            wx.chooseWXPay({
+                                timestamp: obj.timestamp, // 支付签名时间戳，注意微信jssdk中的所有使用timestamp字段均为小写。但最新版的支付后台生成签名使用的timeStamp字段名需大写其中的S字符
+                                nonceStr: obj.nonce_str, // 支付签名随机串，不长于 32 位
+                                package: "prepay_id="+obj.prepay_id+"", // 统一支付接口返回的prepay_id参数值，提交格式如：prepay_id=\*\*\*）
+                                signType: 'MD5', // 签名方式，默认为'SHA1'，使用新版支付需传入'MD5'
+                                paySign: obj.paysign, // 支付签名
+                                success: function (res) {
+                                    // 支付成功后的回调函数
+                                    NativeFunc({
+                                        ACTION: "OPENURL",
+                                        PARAM: {
+                                            URL: localStorage.getItem('paymentRequestUrl') +"/payResultWx.html?payment_no="+localStorage.getItem("paymentNo")
+                                        }
+                                    })
+                                    //console.log(res);
+                                },
+                                fail:function (res) {
+                                    console.log(res);
+                                }
+                            })
+                            console.log('ready');
+                        });
+                        wx.error(function (res) {
+                            console.log(res);
+                        });
+
+                    }else{
+                        //$.toptip(data.msg, 'error');//接口报错
                     }
                 });
             }

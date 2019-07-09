@@ -46,6 +46,18 @@ Date.prototype.Format = function(fmt) { //author: meizz
 
 /* 公共类 */
 var custom = {
+	getParams: function (key) {
+		var url = location.search.replace(/^\?/, '').split('&');
+		var paramsObj = {};
+		for (var i = 0, iLen = url.length; i < iLen; i++) {
+			var param = url[i].split('=');
+			paramsObj[param[0]] = param[1];
+		}
+		if (key) {
+			return paramsObj[key] || '';
+		}
+		return paramsObj;
+	},
 	//获取没有数据DOM
 	getNoneDataImg:function(text,top) {
 		if (text == undefined || text.length == 0) text = '没有数据';

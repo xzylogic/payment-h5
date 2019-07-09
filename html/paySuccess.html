@@ -26,8 +26,8 @@
   <script type="text/javascript" src="../lib/js/fastclick.min.js"></script>
   <script type="text/javascript" src="../lib/js/jquery.min.js"></script>
   <script src="../lib/js/jquery-weui.js"></script>
-  <script type="text/javascript" src="../custom/js/native.js"></script>
-  <script type="text/javascript" src="../custom/js/common.js?v=2019042601"></script>
+  <script type="text/javascript" src="../custom/js/native.js?v=1.0"></script>
+  <script type="text/javascript" src="../custom/js/common.js?v=1.0"></script>
   <script src="../custom/js/myTips.js?v=2019042601"></script>
   <script src="../custom/js/api.js?v=2019042601"></script>
   <script>
@@ -38,11 +38,7 @@
           //click事件优化
           FastClick.attach(document.body);
 
-          var netToken = localStorage.getItem('netToken');
           var requestUrl= localStorage.getItem('requestUrl');
-          var channelCode= localStorage.getItem('channelCode');
-          var lightAppCode=localStorage.getItem('lightAppCode');
-          var shopUserId= localStorage.getItem('shopUserId');
           var isNative=localStorage.getItem('isNative');
 
           //查看订单

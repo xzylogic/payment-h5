@@ -36,131 +36,114 @@
     <script type="text/javascript" src="../lib/js/fastclick.min.js"></script>
     <script type="text/javascript" src="../lib/js/jquery.min.js"></script>
     <script src="../lib/js/jquery-weui.js"></script>
-    <script type="text/javascript" src="../custom/js/native.js"></script>
-    <script type="text/javascript" src="../custom/js/common.js?v=2019042601"></script>
+    <script type="text/javascript" src="../custom/js/native.js?v=1.0"></script>
+    <script type="text/javascript" src="../custom/js/common.js?v=1.0"></script>
     <script src="../custom/js/myTips.js?v=2019042601"></script>
     <script src="../custom/js/api.js?v=2019042601"></script>
     <script>
+        var pageData = {
+            netToken: localStorage.getItem('netToken'),
+            requestUrl: getParams("requestUrl") || localStorage.getItem('requestUrl'),
+            channelCode: getParams("channelCode") || localStorage.getItem('channelCode'),
+            lightAppCode: getParams("lightAppCode") || localStorage.getItem('lightAppCode'),
+            isNative: getParams("isNative") || localStorage.getItem('isNative'),
+            indexUrl: localStorage.getItem('indexUrl'),
+            paymentRequestUrl:localStorage.getItem('paymentRequestUrl'),
+            orderId:localStorage.getItem("orderId"),//订单id
+            paymentNo:getParams("out_trade_no"),
+        }
         $(function () {
             //click事件优化
             FastClick.attach(document.body);
 
-            var netToken = localStorage.getItem('netToken');
-            var requestUrl = localStorage.getItem('requestUrl');
-            var channelCode = localStorage.getItem('channelCode');
-            var lightAppCode = localStorage.getItem('lightAppCode');
-            var shopUserId = localStorage.getItem('shopUserId');
-            var isNative=localStorage.getItem('isNative');
-            //支付相关url前段
-            var paymentRequestUrl=localStorage.getItem('paymentRequestUrl');
-
-            var orderId = localStorage.getItem("orderId");//订单id
-            var paymentNo = getParams("out_trade_no");//支付单id
-
-            // var payBusinessNo=localStorage.setItem("payBusinessNo");//商户号
-            showMyloading();
             try {
-                $.ajax({
-                    // url: ajaxUrl.payAgentQueryPayStatus,
-                    url: ajaxUrl.payAgentPayNotifyStatus,
-                    type: "post",
-                    contentType: 'application/json',
-                    beforeSend: function (request) {
-                        request.setRequestHeader("token", netToken);
-                        request.setRequestHeader("channelCode", channelCode);
-                        request.setRequestHeader("lightAppCode", lightAppCode);
-                        request.setRequestHeader('timestamp', new Date().getTime());
-                    },
-                    data: JSON.stringify({
-                        "paymentNo":paymentNo
-                        // "biz_id": payBusinessNo,
-                        // "business_no": orderId,
-                        // "uid": localStorage.getItem('jkyUid'),
-                    }),
-                    success: function (firstData) {
-                        if (firstData.code == 0) {
-                            if (firstData.data.status == 1) {
-                                $("#success").show();
-                                //跳首页
-                                $(document).on('click', '#toIndex', function () {
-                                    if(isNative==1){
-                                        //回到第一个webview
-                                        //是否是商城(配在底部tab)
-                                        var index;
-                                        if(/healthcloud-shop-h5/.test(firstData.data.orderItemUrl)){
-                                            index=-9;
-                                        }else{
-                                            index=-1;
-                                        }
-                                        NativeFunc({
-                                            ACTION: 'CLOSEPAGE',
-                                            PARAM: {
-                                                INDEX: index
-                                            }
-                                        });
-                                    }else {
-                                        if(!localStorage.getItem("indexUrl")){
-                                            NativeFunc({
-                                                ACTION: "OPENURL",
-                                                PARAM: {
-                                                    URL: requestUrl +"/index.html?noFirst=1&forbidden=1"
-                                                }
-                                            })
-                                        }else{
-                                            NativeFunc({
-                                                ACTION: "OPENURL",
-                                                PARAM: {
-                                                    URL: localStorage.getItem("indexUrl") + "&noFirst=1"
-                                                }
-                                            })
-                                        }
-                                    }
-                                });
-                                //查看订单
-                                $(document).on('click', '#orderDetail', function () {
-                                    var that = this;
-                                    //是否是商城
-                                    var detailParam;
-                                    if(/healthcloud-shop-h5/.test(firstData.data.orderItemUrl)){
-                                        detailParam="orderId";
-                                    }else{
-                                        detailParam="pay_code";
-                                    }
-									// 延迟跳转订单页面 防止由于网络延时导致后台未更新订单状态
-									showMyloading();
-									setTimeout(function() {
-										hideMyloading();
-										NativeFunc({
-										    ACTION: "OPENURL",
-										    PARAM: {
-										        URL: firstData.data.orderItemUrl+"?"+detailParam+"=" + localStorage.getItem(detailParam)+"&v="+new Date().getTime()
-										    }
-										})
-									}, 2500)
-                                });
-                            } else{
-                                $("#fail").show();
-                                //重新支付
-                                $(document).on('click', '.repay', function () {
-                                    var that = this;
-                                    NativeFunc({
-                                        ACTION: "OPENURL",
-                                        PARAM: {
-                                            URL: paymentRequestUrl + "/orderPay.html?forPage=2&orderId=" + localStorage.getItem("orderId") + "&paymentNo=" + paymentNo + "&totalFee=" + localStorage.getItem("amount")
-                                        }
-                                    })
-                                });
-                            }
-                            hideMyloading();
-                        }else {
-                            requestWrongCode(firstData.code, firstData.msg);
-                            hideMyloading();
-                        }
-                    },
+                custom.ajaxRequest({
+                    url:ajaxUrl.payAgentPayNotifyStatus,
+                    type: "POST",
+                    data: JSON.stringify({"paymentNo":pageData.paymentNo}),
                     error: function (error) {
                         hideMyloading();
                         console.log(error)
                         showMyTip();
+                    }
+                },function (firstData) {
+                    if (firstData.code == 0) {
+                        if (firstData.data.status == 1) {
+                            $("#success").show();
+                            //跳首页
+                            $(document).on('click', '#toIndex', function () {
+                                if(pageData.isNative=='1'){
+                                    //回到第一个webview
+                                    //是否是商城(配在底部tab)
+                                    var index;
+                                    if(/healthcloud-shop-h5/.test(firstData.data.orderItemUrl)){
+                                        index=-9;
+                                    }else{
+                                        index=-1;
+                                    }
+                                    NativeFunc({
+                                        ACTION: 'CLOSEPAGE',
+                                        PARAM: {
+                                            INDEX: index
+                                        }
+                                    });
+                                }else {
+                                    if(!pageData.indexUrl){
+                                        NativeFunc({
+                                            ACTION: "OPENURL",
+                                            PARAM: {
+                                                URL: pageData.requestUrl +"/index.html?noFirst=1&forbidden=1"
+                                            }
+                                        })
+                                    }else{
+                                        NativeFunc({
+                                            ACTION: "OPENURL",
+                                            PARAM: {
+                                                URL: pageData.indexUrl + "&noFirst=1"
+                                            }
+                                        })
+                                    }
+                                }
+                            });
+                            //查看订单
+                            $(document).on('click', '#orderDetail', function () {
+                                var that = this;
+                                //是否是商城
+                                var detailParam;
+                                if(/healthcloud-shop-h5/.test(firstData.data.orderItemUrl)){
+                                    detailParam="orderId";
+                                }else{
+                                    detailParam="pay_code";
+                                }
+                                // 延迟跳转订单页面 防止由于网络延时导致后台未更新订单状态
+                                showMyloading();
+                                setTimeout(function() {
+                                    hideMyloading();
+                                    NativeFunc({
+                                        ACTION: "OPENURL",
+                                        PARAM: {
+                                            URL: firstData.data.orderItemUrl+"?"+detailParam+"=" + localStorage.getItem(detailParam)+"&v="+new Date().getTime()
+                                        }
+                                    })
+                                }, 2500)
+                            });
+                        } else{
+                            $("#fail").show();
+                            //重新支付
+                            $(document).on('click', '.repay', function () {
+                                var that = this;
+                                NativeFunc({
+                                    ACTION: "OPENURL",
+                                    PARAM: {
+                                        URL: pageData.paymentRequestUrl + "/orderPay.html?forPage=2&orderId=" + pageData.orderId + "&paymentNo=" + pageData.paymentNo + "&totalFee=" + localStorage.getItem("amount")
+                                    }
+                                })
+                            });
+                        }
+                        hideMyloading();
+                    }else {
+                        requestWrongCode(firstData.code, firstData.msg);
+                        hideMyloading();
                     }
                 })
             } catch (e) {

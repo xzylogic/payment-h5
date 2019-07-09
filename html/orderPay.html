@@ -50,61 +50,74 @@
 <script type="text/javascript" src="../lib/js/fastclick.min.js"></script>
 <script type="text/javascript" src="../lib/js/jquery.min.js"></script>
 <script src="../lib/js/jquery-weui.js"></script>
-<script type="text/javascript" src="../custom/js/native.js"></script>
+<script type="text/javascript" src="../custom/js/native.js?v=1.0"></script>
 
-<script type="text/javascript" src="../custom/js/common.js?v=2019042601"></script>
+<script type="text/javascript" src="../custom/js/common.js?v=1.0"></script>
 <script src="../custom/js/myTips.js?v=2019042601"></script>
 <script src="../custom/js/api.js?v=2019051301"></script>
 <script type="text/javascript" src="https://pv.sohu.com/cityjson?ie=utf-8"></script>
 
-<script src="../custom/js/share.js?v=1.4"></script>
+<script src="../custom/js/share.js?v=1.5"></script>
 <script>
+    var pageData = {
+        hasWx: true,//是否安装了微信
+        netToken: localStorage.getItem('netToken'),
+        requestUrl: getParams("requestUrl") || localStorage.getItem('requestUrl'),
+        channelCode: getParams("channelCode") || localStorage.getItem('channelCode'),
+        lightAppCode: getParams("lightAppCode") || localStorage.getItem('lightAppCode'),
+        //shopUserId: getParams("shopUserId") || localStorage.getItem('shopUserId'),
+        //isNative: getParams("isNative") || localStorage.getItem('isNative'),
+        wechatOpenId: localStorage.getItem('wechat_openId'),//微信容器中支付需要参数
+        phoneBeAnalysis: {'phone': localStorage.getItem('phone')},//埋点需要
+
+        paymentRequestUrl: localStorage.getItem('paymentRequestUrl'),//支付相关url前段
+        paymentNo: getParams("paymentNo"),//支付单id
+        jkyUid:localStorage.getItem('jkyUid'),
+        totalFee: Number(getParams("totalFee")).toFixed(2),//金额
+    }
     $(function () {
-        var hasWx=true;
-        var forPage=getParams("forPage");
-        //从我的订单直接进入支付页面，不需要连续关闭两个页面
-        if(forPage=='0'){
-            //IOS 直接返回一个Webview 无论有多少页内跳转(等ios发布之后注释放开，不然index:100时 ios闪退)
-             if(nativeObj.frameType=='0'){
-                 setTimeout(function () {
-                     NativeFunc({
-                         ACTION: "BACKMODE",
-                         PARAM: {
-                             INDEX: "100"
-                         }
-                     })
-                 },100);
-             }
-        } else if(forPage=='2'){
-            setTimeout(function () {
-                NativeFunc({
-                    ACTION: "BACKMODE",
-                    PARAM: {
-                        INDEX: "2"
-                    }
-                })
-            },100);
-        }else{
-            setTimeout(function () {
-                NativeFunc({
-                    ACTION: "BACKMODE",
-                    PARAM: {
-                        INDEX: "1"
-                    }
-                })
-            },100);
-        }
-        setTimeout(function () {
+        // 初始化页面参数、属性
+        {
+            //click事件优化
+            FastClick.attach(document.body);
+            localStorage.setItem("paymentNo", pageData.paymentNo);
+
+
+            var closeIndex = '1';
+            var forPage = getParams("forPage");//设置返回模式
+            switch (forPage) {
+                //forPage:0，从我的订单直接进入支付页面，不需要连续关闭两个页面
+                case '0':
+                    //IOS 直接返回一个Webview 无论有多少页内跳转(等ios发布之后注释放开，不然index:100时 ios闪退)
+                    if (nativeObj.frameType == '0') closeIndex = '100';
+                    break;
+                case '2':
+                    //从支付结果页面再次支付
+                    closeIndex = '2';
+                    break;
+                default:
+                    closeIndex = '1';
+                    break;
+            }
+
+            //设置返回模式
+            NativeFunc({
+                ACTION: "BACKMODE",
+                PARAM: {
+                    INDEX: closeIndex
+                }
+            })
+
             NativeFunc({
                 ACTION: "CHECK_WECHAT_ALIPAY",
                 PARAM: {
                     MODE: "GET"
                 }
             }, function (response) {
-                if(response) {
+                if (response) {
                     var objResp = JSON.parse(response);
-                    if(objResp.wechat==0){
-                        hasWx=false;
+                    if (objResp.wechat == 0) {
+                        pageData.hasWx = false;
                     }
                     // {
                     //     wechat:0
@@ -112,118 +125,82 @@
                     // }
                 }
             });
-        },100)
-        //click事件优化
-        FastClick.attach(document.body);
 
-        var netToken = localStorage.getItem('netToken');
-        var requestUrl= localStorage.getItem('requestUrl');
-        var channelCode= localStorage.getItem('channelCode');
-        var lightAppCode=localStorage.getItem('lightAppCode');
-        var shopUserId= localStorage.getItem('shopUserId');
-        var isNative=localStorage.getItem('isNative');
-        //商城显示保留60分钟提示
-        if(/healthcloud-shop-h5/.test(requestUrl)){
-            $(".custom-top-tips").show();
-            //商城埋点
-            custom.beAnalysis('page', 'page_zfdd', '', {'phone' : localStorage.getItem('phone')});
+            //操作系统
+            var ua = navigator.userAgent;
+            if (ua.toLowerCase().indexOf("iphone") > -1 || ua.toLowerCase().indexOf("ipad") > -1) {
+                pageData.os = "ios";
+            } else {
+                pageData.os = "android";
+            }
+
+            //商城显示保留60分钟提示
+            if (/healthcloud-shop-h5/.test(pageData.requestUrl)) {
+                $(".custom-top-tips").show();
+                //商城埋点
+                custom.beAnalysis('page', 'page_zfdd', '', pageData.phoneBeAnalysis);
+            }
+            $(".total-box span").html("￥" + pageData.totalFee);
         }
-        //支付相关url前段
-        var paymentRequestUrl=localStorage.getItem('paymentRequestUrl');
-        //订单id
-        var orderId=getParams("orderId");
-        localStorage.setItem("orderId",orderId);
-        //支付单id
-        var paymentNo=getParams("paymentNo");
-        localStorage.setItem("paymentNo",paymentNo);
-        //商户号
-        var payBusinessNo=getParams("payBusinessNo");
-        localStorage.setItem("payBusinessNo",payBusinessNo);
-        //金额
-        var totalFee=Number(getParams("totalFee")).toFixed(2);
-        $(".total-box span").html("￥"+totalFee);
-        var newTab;
-        //操作系统
-        var ua = navigator.userAgent;
-        var os;
-        if (ua.toLowerCase().indexOf("iphone") > -1||ua.toLowerCase().indexOf("ipad") > -1) {
-            os="ios";
-        }else{
-            os="android";
-        }
-        getPayWayAndPay();
-        function getPayWayAndPay() {
-            showMyloading();
-            $.ajax({
+
+        var PayWayFun = function getPayWayAndPay() {
+            custom.ajaxRequest({
                 url:ajaxUrl.paymentInfo,
-                type:"post",
-//                async:false,
-                contentType: 'application/json',
-                beforeSend: function(request) {
-                    request.setRequestHeader("token",netToken);
-                    request.setRequestHeader("channelCode",channelCode);
-                    request.setRequestHeader("lightAppCode",lightAppCode);
-                    request.setRequestHeader('timestamp', new Date().getTime());
-                },
-                data:JSON.stringify(
-                    // {
-                    //     "business_no": orderId,
-                    //     "biz_id": payBusinessNo
-                    // }
-                    {
-                        "paymentNo": paymentNo
-                    }
-                ),
-                success:function(data){
-                    if(data.code==0){
-                        $("body").show();
-                        if(data.data.paymentChannel.split(",").indexOf("1")>-1){
-                            //微信容器打开，不显示支付宝支付
-                            if(isWeiXin()){ }
-                            else $("#alipay").show();
-                        }
-                        if(data.data.paymentChannel.split(",").indexOf("2")>-1){
-                            $("#wechat").show();
-                        }
-                    }else {
-                        requestWrongCode(data.code, data.msg);
-                    }
-                    hideMyloading();
-                },
-                error:function(error){
+                type: "POST",
+                data: JSON.stringify({ "paymentNo": pageData.paymentNo }),
+                error: function (error) {
                     showMyTip();
                     hideMyloading();
                 }
+            },function (data) {
+                if (data.code == 0) {
+                    $("body").show();
+                    if (data.data.paymentChannel.split(",").indexOf("1") > -1) {
+                        //微信容器打开，不显示支付宝支付
+                        if (isWeiXin()) {
+                        }
+                        else $("#alipay").show();
+                    }
+                    if (data.data.paymentChannel.split(",").indexOf("2") > -1) {
+                        $("#wechat").show();
+                    }
+                } else {
+                    requestWrongCode(data.code, data.msg);
+                }
+                hideMyloading();
             });
         }
+        PayWayFun();
+
         //支付宝
-        $(document).on('click', '#alipay', function(){
-            if(!($($("#alipay label")[0]).hasClass("checkRadio"))){
+        $(document).on('click', '#alipay', function () {
+            if (!($($("#alipay label")[0]).hasClass("checkRadio"))) {
                 $("#alipay label")[0].addClass("checkRadio");
                 $("#wechat label")[0].removeClass("checkRadio");
             }
         });
         //微信支付
-        $(document).on('click', '#wechat', function(){
-            if(!($($("#wechat label")[0]).hasClass("checkRadio"))){
+        $(document).on('click', '#wechat', function () {
+            if (!($($("#wechat label")[0]).hasClass("checkRadio"))) {
                 $("#wechat label")[0].addClass("checkRadio");
                 $("#alipay label")[0].removeClass("checkRadio");
             }
         });
-        //支付
-        var checkedWay="";
-        $(".custom-btm-btn").on("click",function (){
-            if($("#alipay label").hasClass("checkRadio")){
-                checkedWay="alipay"
-            }else if($("#wechat label").hasClass("checkRadio")){
-                checkedWay="wechat"
+
+        //支付事件
+        var checkedWay = "";
+        $(".custom-btm-btn").on("click", function () {
+            if ($("#alipay label").hasClass("checkRadio")) {
+                checkedWay = "alipay"
+            } else if ($("#wechat label").hasClass("checkRadio")) {
+                checkedWay = "wechat"
             }
-            if(checkedWay==""){
+            if (checkedWay == "") {
                 $(".mytip").html("请选择支付方式");
                 showMyTip();
                 return;
             }
-            if(checkedWay=="wechat"&&hasWx==false){
+            if (checkedWay == "wechat" && pageData.hasWx == false) {
                 $(".mytip").html("微信未安装");
                 showMyTip();
                 return;
@@ -231,109 +208,84 @@
 //            if(is_weixn_qq()&&checkedWay=="alipay"){
 //                $(".mytip").html("下单成功,请至健康云app商城订单完成支付");
 //                showMyTipLong();
-//                setTimeout(function () {
-//                    isSubmitting=false;
-//                    NativeFunc({
-//                        ACTION: "OPENURL",
-//                        PARAM: {
-//                            URL: "https://www.wdjky.com/neohealthcloud-app-h5/"
-//                        }
-//                    })
-//                },2500)
+//                isSubmitting=false;
+//                NativeFunc({
+//                    ACTION: "OPENURL",
+//                    PARAM: {
+//                        URL: "https://www.wdjky.com/neohealthcloud-app-h5/"
+//                    }
+//                })
 //            }else{
-                //调接口创建支付信息
-                showMyloading();
-                var requestObj = {
-                    "clientIp": returnCitySN.cip,
-                    "paymentNo": paymentNo,
-                    // "biz_id": payBusinessNo,
-                    // "business_no": orderId,
-                    "os": os,
-                    // "payType": checkedWay,
-                    "uid":localStorage.getItem('jkyUid')
-                }
-                if(isWeiXin()){
-                    requestObj.payType = 'wechat_jsapi';//微信容器中支付
-                    requestObj.openId = localStorage.getItem('wechat_openId');
-                }
-                else{
-                    requestObj.payType = checkedWay;
-                }
-                $.ajax({
-                    url:ajaxUrl.paymentAgent,
-                    type:"post",
-//                async:false,
-                    contentType: 'application/json',
-                    beforeSend: function(request) {
-                        request.setRequestHeader("token",netToken);
-                        request.setRequestHeader("channelCode",channelCode);
-                        request.setRequestHeader("lightAppCode",lightAppCode);
-                        request.setRequestHeader('timestamp', new Date().getTime());
-                    },
-                    data:JSON.stringify(requestObj),
-                    success:function(firstData){
-                        if(firstData.code==0){
-                            if(/healthcloud-shop-h5/.test(requestUrl)) {
-                                //埋点
-                                custom.beAnalysis('click', 'page_zfdd', 'button_zf', {
-                                    'phone': localStorage.getItem('phone')
-                                });
-                            }
+            //调接口创建支付信息
+            var requestObj = {
+                "clientIp": returnCitySN.cip,
+                "paymentNo": pageData.paymentNo,
+                "os": pageData.os,
+                "uid": pageData.jkyUid
+            }
+            if (isWeiXin()) {
+                requestObj.payType = 'wechat_jsapi';//微信容器中支付
+                requestObj.openId = pageData.wechatOpenId;
+            }
+            else {
+                requestObj.payType = checkedWay;
+            }
 
-                            localStorage.setItem("amount",Number(totalFee).toFixed(2));
-                            
-                            //微信容器支付
-                            if(isWeiXin()){
-                                if(/healthcloud-shop-h5/.test(requestUrl)) {
-                                    //埋点
-                                    custom.beAnalysis('click', 'page_zfdd', 'button_wxzf', {
-                                        'phone': localStorage.getItem('phone')
-                                    });
-                                }
-                                    wxPayment(firstData.data);//微信支付
-                            }
-                            else{
-                                if(checkedWay=="alipay"){
-                                    if(/healthcloud-shop-h5/.test(requestUrl)) {
-                                        //埋点
-                                        custom.beAnalysis('click', 'page_zfdd', 'button_zfbzf', {
-                                            'phone': localStorage.getItem('phone')
-                                        });
-                                    }
-                                    document.write(firstData.data);
-                                }else{
-                                    if(/healthcloud-shop-h5/.test(requestUrl)) {
-                                        //埋点
-                                        custom.beAnalysis('click', 'page_zfdd', 'button_wxzf', {
-                                            'phone': localStorage.getItem('phone')
-                                        });
-                                    }
-                                    localStorage.setItem("payRes",firstData.data)
-                                    NativeFunc({
-                                        ACTION: "OPENURL",
-                                        PARAM: {
-                                            URL: paymentRequestUrl +"/blank.html"
-                                        }
-                                    })
-                                }
-                            }
-                            hideMyloading();
-                        }else {
-                            requestWrongCode(firstData.code, firstData.msg);
-                            hideMyloading();
-                        }
-                    },
-                    error:function(error){
-                        showMyTip();
-                        hideMyloading();
+            custom.ajaxRequest({
+                url:ajaxUrl.paymentAgent,
+                type: "POST",
+                data: JSON.stringify(requestObj),
+                error: function (error) {
+                    showMyTip();
+                    hideMyloading();
+                }
+            },function (firstData) {
+                if (firstData.code == 0) {
+                    if (/healthcloud-shop-h5/.test(pageData.requestUrl)) {
+                        //埋点
+                        custom.beAnalysis('click', 'page_zfdd', 'button_zf', pageData.phoneBeAnalysis);
                     }
-                });
-//            }
-        })
 
+                    localStorage.setItem("amount", Number(pageData.totalFee).toFixed(2));
+
+                    //微信容器支付
+                    if (isWeiXin()) {
+                        if (/healthcloud-shop-h5/.test(pageData.requestUrl)) {
+                            //埋点
+                            custom.beAnalysis('click', 'page_zfdd', 'button_wxzf', pageData.phoneBeAnalysis);
+                        }
+                        wxPayment(firstData.data);//微信支付
+                    }
+                    else {
+                        if (checkedWay == "alipay") {
+                            if (/healthcloud-shop-h5/.test(pageData.requestUrl)) {
+                                //埋点
+                                custom.beAnalysis('click', 'page_zfdd', 'button_zfbzf', pageData.phoneBeAnalysis);
+                            }
+                            document.write(firstData.data);
+                        } else {
+                            if (/healthcloud-shop-h5/.test(pageData.requestUrl)) {
+                                //埋点
+                                custom.beAnalysis('click', 'page_zfdd', 'button_wxzf', pageData.phoneBeAnalysis);
+                            }
+                            localStorage.setItem("payRes", firstData.data)
+                            NativeFunc({
+                                ACTION: "OPENURL",
+                                PARAM: {
+                                    URL: pageData.paymentRequestUrl + "/blank.html"
+                                }
+                            })
+                        }
+                    }
+                    hideMyloading();
+                } else {
+                    requestWrongCode(firstData.code, firstData.msg);
+                    hideMyloading();
+                }
+            });
+        })
     })
 
-    
 </script>
 </body>
 </html>
